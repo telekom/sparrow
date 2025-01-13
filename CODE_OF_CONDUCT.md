@@ -1,3 +1,8 @@
+<!--
+SPDX-FileCopyrightText: 2023 www.contributor-covenant.org
+
+SPDX-License-Identifier: CC-BY-4.0
+-->
 
 # Contributor Covenant Code of Conduct
 

@@ -37,9 +37,10 @@
     - [Traceroute Prometheus Metrics](#traceroute-prometheus-metrics)
     - [Traceroute API Metrics](#traceroute-api-metrics)
 - [API](#api)
-- [Metrics](#metrics)
+- [Metrics, Telemetry \& Dashboards](#metrics-telemetry--dashboards)
   - [Prometheus Integration](#prometheus-integration)
   - [Traces](#traces)
+  - [Grafana Dashboards](#grafana-dashboards)
 - [Code of Conduct](#code-of-conduct)
 - [Working Language](#working-language)
 - [Support and Feedback](#support-and-feedback)
@@ -696,6 +697,8 @@ This project has adopted the [Contributor Covenant](https://www.contributor-cove
 conduct. Please see the details in our [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md). All contributors must abide by the code
 of conduct.
 
+By participating in this project, you agree to abide by its [Code of Conduct](CODE_OF_CONDUCT.md) at all times.
+
 ## Working Language
 
 We decided to apply *English* as the primary project language.
@@ -710,9 +713,9 @@ The application itself and all end-user facing content will be made available in
 The following channels are available for discussions, feedback, and support requests:
 
 <!-- markdownlint-disable MD033 -->
-| Type       | Channel                                                                                                                                                             |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Issues** | <a href="/../../issues/new/choose" title="General Discussion"><img alt="Issues" src="https://img.shields.io/github/issues/caas-team/sparrow?style=flat-square"></a> |
+| Type       | Channel                                                                                                                                                           |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Issues** | <a href="/../../issues/new/choose" title="General Discussion"><img alt="Issues" src="https://img.shields.io/github/issues/telekom/sparrow?style=flat-square"></a> |
 <!-- markdownlint-enable MD033 -->
 
 ## How to Contribute
@@ -723,13 +726,6 @@ participating in this project, you agree to abide by its [Code of Conduct](./COD
 
 ## Licensing
 
-Copyright (c) 2023 Deutsche Telekom IT GmbH.
-
-Licensed under the **Apache License, Version 2.0** (the "License"); you may not use this file except in compliance with
-the License.
-
-You may obtain a copy of the License at <https://www.apache.org/licenses/LICENSE-2.0>.
-
-Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "
-AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the [LICENSE](./LICENSE) for
-the specific language governing permissions and limitations under the License.
+This project follows the [REUSE standard for software licensing](https://reuse.software/).
+Each file contains copyright and license information, and license texts can be found in the [./LICENSES](./LICENSES) folder. For more information visit https://reuse.software/.
+You can find a guide for developers at [Reuse Template Docs](https://telekom.github.io/reuse-template/).
