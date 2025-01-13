@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2025 Deutsche Telekom IT GmbH
+
+SPDX-License-Identifier: CC-BY-4.0
+-->
+
 # Sparrow - Infrastructure Monitoring<!-- omit from toc -->
 
 <!-- markdownlint-disable MD033 -->

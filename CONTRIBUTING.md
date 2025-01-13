@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2025 Telekom AG
+
+SPDX-License-Identifier: CC-BY-4.0
+-->
+
 # Contributing
 
 ## Code of conduct
