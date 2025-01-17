@@ -1,4 +1,4 @@
-# Sparrow - Infrastructure Monitoring<!-- omit from toc -->
+# Canary Revived - Infrastructure Monitoring<!-- omit from toc -->
 
 <!-- markdownlint-disable MD033 -->
 <p align="center">
