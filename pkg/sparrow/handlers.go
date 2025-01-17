@@ -24,11 +24,12 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+
 	"github.com/caas-team/sparrow/internal/logger"
 	"github.com/caas-team/sparrow/pkg/api"
 	"github.com/go-chi/chi/v5"
 	"github.com/goccy/go-yaml"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 type encoder interface {
