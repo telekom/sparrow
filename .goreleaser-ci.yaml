@@ -13,14 +13,14 @@ builds:
       - arm64
 dockers:
   - image_templates:
-      - "ghcr.io/caas-team/sparrow:{{ .Version }}"
+      - "ghcr.io/telekom/sparrow:{{ .Version }}"
       - "mtr.devops.telekom.de/sparrow/sparrow:{{ .Version }}"
     dockerfile: Dockerfile
     build_flag_templates:
       - --label=org.opencontainers.image.title={{ .ProjectName }}
       - --label=org.opencontainers.image.description="This is a pre-release version. Do not use this in production!"
       - --label=org.opencontainers.image.url=https://caas.telekom.de
-      - --label=org.opencontainers.image.source=https://github.com/caas-team/sparrow
+      - --label=org.opencontainers.image.source=https://github.com/telekom/sparrow
       - --label=org.opencontainers.image.version={{ .Version }}
       - --label=org.opencontainers.image.created={{ .Timestamp }}
       - --label=org.opencontainers.image.revision={{ .FullCommit }}

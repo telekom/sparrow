@@ -21,7 +21,7 @@ package config
 import (
 	"context"
 
-	"github.com/caas-team/sparrow/pkg/checks/runtime"
+	"github.com/telekom/sparrow/pkg/checks/runtime"
 )
 
 //go:generate moq -out loader_moq.go . Loader

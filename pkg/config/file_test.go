@@ -26,9 +26,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/caas-team/sparrow/pkg/checks/health"
-	"github.com/caas-team/sparrow/pkg/checks/runtime"
-	"github.com/caas-team/sparrow/pkg/config/test"
+	"github.com/telekom/sparrow/pkg/checks/health"
+	"github.com/telekom/sparrow/pkg/checks/runtime"
+	"github.com/telekom/sparrow/pkg/config/test"
 	"gopkg.in/yaml.v3"
 )
 
