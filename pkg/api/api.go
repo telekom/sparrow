@@ -25,8 +25,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/caas-team/sparrow/internal/logger"
 	"github.com/go-chi/chi/v5"
+	"github.com/telekom/sparrow/internal/logger"
 )
 
 //go:generate moq -out api_moq.go . API

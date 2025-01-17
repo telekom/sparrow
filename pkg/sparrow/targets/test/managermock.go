@@ -21,9 +21,9 @@ package managermock
 import (
 	"context"
 
-	"github.com/caas-team/sparrow/pkg/checks"
+	"github.com/telekom/sparrow/pkg/checks"
 
-	"github.com/caas-team/sparrow/internal/logger"
+	"github.com/telekom/sparrow/internal/logger"
 )
 
 // MockTargetManager is a mock implementation of the TargetManager interface

@@ -25,12 +25,12 @@ import (
 	"sync"
 	"time"
 
-	smetrics "github.com/caas-team/sparrow/pkg/sparrow/metrics"
 	"github.com/prometheus/client_golang/prometheus"
+	smetrics "github.com/telekom/sparrow/pkg/sparrow/metrics"
 
-	"github.com/caas-team/sparrow/internal/logger"
-	"github.com/caas-team/sparrow/pkg/checks"
-	"github.com/caas-team/sparrow/pkg/sparrow/targets/remote"
+	"github.com/telekom/sparrow/internal/logger"
+	"github.com/telekom/sparrow/pkg/checks"
+	"github.com/telekom/sparrow/pkg/sparrow/targets/remote"
 )
 
 var _ TargetManager = (*manager)(nil)

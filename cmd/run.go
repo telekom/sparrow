@@ -29,9 +29,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/caas-team/sparrow/internal/logger"
-	"github.com/caas-team/sparrow/pkg/config"
-	"github.com/caas-team/sparrow/pkg/sparrow"
+	"github.com/telekom/sparrow/internal/logger"
+	"github.com/telekom/sparrow/pkg/config"
+	"github.com/telekom/sparrow/pkg/sparrow"
 )
 
 const (
