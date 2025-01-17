@@ -4,7 +4,7 @@ go 1.23
 
 require (
 	github.com/getkin/kin-openapi v0.128.0
-	github.com/go-chi/chi/v5 v5.1.0
+	github.com/go-chi/chi/v5 v5.2.0
 	github.com/google/go-cmp v0.6.0
 	github.com/jarcoal/httpmock v1.3.1
 	github.com/prometheus/client_golang v1.20.5
@@ -17,7 +17,7 @@ require (
 	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.33.0
 	go.opentelemetry.io/otel/sdk v1.33.0
 	go.opentelemetry.io/otel/trace v1.33.0
-	golang.org/x/net v0.33.0
+	golang.org/x/net v0.34.0
 	golang.org/x/sys v0.29.0
 	google.golang.org/grpc v1.69.4
 	gopkg.in/yaml.v3 v3.0.1
