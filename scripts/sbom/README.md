@@ -17,7 +17,7 @@ Alternative output variants can be found [here](https://github.com/anchore/syft/
 Use the following command to generate a SBOM markdown file using the `example.sbom.tmpl` goTemplate template file:
 
 ```shell
-SYFT_GOLANG_SEARCH_REMOTE_LICENSES=true syft ghcr.io/caas-team/sparrow:v0.5.0 -o template -t scripts/sbom/example.sbom.tmpl
+SYFT_GOLANG_SEARCH_REMOTE_LICENSES=true syft ghcr.io/telekom/sparrow:v0.5.0 -o template -t scripts/sbom/example.sbom.tmpl
 ```
 
 Setting the env variable `SYFT_GOLANG_SEARCH_REMOTE_LICENSES=true` will ensure to lookup licenses remotely. In this example the sparrow image in version `v0.5.0` is scanned.
