@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: 2025 Telekom AG
+SPDX-FileCopyrightText: 2025 Deutsche Telekom AG
 
 SPDX-License-Identifier: CC-BY-4.0
 -->
