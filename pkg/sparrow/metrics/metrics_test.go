@@ -24,11 +24,14 @@ import (
 	"testing"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/telekom/sparrow/test"
 	"go.opentelemetry.io/otel"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
 
 func TestPrometheusMetrics_GetRegistry(t *testing.T) {
+	test.MarkAsShort(t)
+
 	tests := []struct {
 		name     string
 		registry *prometheus.Registry
@@ -53,6 +56,8 @@ func TestPrometheusMetrics_GetRegistry(t *testing.T) {
 }
 
 func TestNewMetrics(t *testing.T) {
+	test.MarkAsShort(t)
+
 	testMetrics := New(Config{})
 	testGauge := prometheus.NewGauge(
 		prometheus.GaugeOpts{
@@ -68,6 +73,8 @@ func TestNewMetrics(t *testing.T) {
 }
 
 func TestMetrics_InitTracing(t *testing.T) {
+	test.MarkAsShort(t)
+
 	tests := []struct {
 		name    string
 		config  Config

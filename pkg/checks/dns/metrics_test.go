@@ -22,9 +22,12 @@ import (
 	"testing"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/telekom/sparrow/test"
 )
 
 func TestMetrics_GetCollectors(t *testing.T) {
+	test.MarkAsShort(t)
+
 	tests := []struct {
 		name    string
 		metrics metrics

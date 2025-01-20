@@ -27,9 +27,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/goccy/go-yaml"
 	"github.com/telekom/sparrow/internal/logger"
 	"github.com/telekom/sparrow/pkg/api"
-	"gopkg.in/yaml.v3"
 )
 
 type encoder interface {
@@ -123,6 +123,7 @@ func (s *Sparrow) handleCheckMetrics(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Add("Content-Type", "application/json")
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
 
@@ -135,5 +136,4 @@ func (s *Sparrow) handleCheckMetrics(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	w.Header().Add("Content-Type", "application/json")
 }

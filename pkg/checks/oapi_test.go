@@ -23,9 +23,12 @@ import (
 	"testing"
 
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/telekom/sparrow/test"
 )
 
 func TestOpenapiFromPerfData(t *testing.T) {
+	test.MarkAsShort(t)
+
 	type args[T any] struct {
 		perfData T
 	}

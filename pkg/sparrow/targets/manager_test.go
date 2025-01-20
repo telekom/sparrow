@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"github.com/telekom/sparrow/pkg/checks"
+	"github.com/telekom/sparrow/test"
 
 	remotemock "github.com/telekom/sparrow/pkg/sparrow/targets/remote/test"
 )
@@ -42,6 +43,8 @@ const (
 // targets list. When an unhealthyTheshold is set, it will also unregister
 // unhealthy targets
 func Test_gitlabTargetManager_refreshTargets(t *testing.T) {
+	test.MarkAsShort(t)
+
 	now := time.Now()
 	tooOld := now.Add(-time.Hour * 2)
 
@@ -138,6 +141,8 @@ func Test_gitlabTargetManager_refreshTargets(t *testing.T) {
 // refreshTargets method will not unregister unhealthy targets if the
 // unhealthyThreshold is 0
 func Test_gitlabTargetManager_refreshTargets_No_Threshold(t *testing.T) {
+	test.MarkAsShort(t)
+
 	tests := []struct {
 		name                    string
 		mockTargets             []checks.GlobalTarget
@@ -208,6 +213,8 @@ func Test_gitlabTargetManager_refreshTargets_No_Threshold(t *testing.T) {
 }
 
 func Test_gitlabTargetManager_GetTargets(t *testing.T) {
+	test.MarkAsShort(t)
+
 	now := time.Now()
 	tests := []struct {
 		name    string
@@ -284,6 +291,8 @@ func Test_gitlabTargetManager_GetTargets(t *testing.T) {
 // Test_gitlabTargetManager_registerSparrow tests that the register method will
 // register the sparrow instance in the remote instance
 func Test_gitlabTargetManager_register(t *testing.T) {
+	test.MarkAsShort(t)
+
 	tests := []struct {
 		name       string
 		wantErr    bool
@@ -324,6 +333,8 @@ func Test_gitlabTargetManager_register(t *testing.T) {
 // Test_gitlabTargetManager_update tests that the update
 // method will update the registration of the sparrow instance in the remote instance
 func Test_gitlabTargetManager_update(t *testing.T) {
+	test.MarkAsShort(t)
+
 	tests := []struct {
 		name         string
 		wantPutError bool
@@ -358,6 +369,8 @@ func Test_gitlabTargetManager_update(t *testing.T) {
 // will register the target if it is not registered yet and update the
 // registration if it is already registered
 func Test_gitlabTargetManager_Reconcile_success(t *testing.T) {
+	test.MarkAsShort(t)
+
 	tests := []struct {
 		name          string
 		registered    bool
@@ -418,6 +431,8 @@ func Test_gitlabTargetManager_Reconcile_success(t *testing.T) {
 // method will register the sparrow, and then update the registration after the
 // registration interval has passed
 func Test_gitlabTargetManager_Reconcile_Registration_Update(t *testing.T) {
+	test.MarkAsShort(t)
+
 	glmock := remotemock.New(
 		[]checks.GlobalTarget{
 			{
@@ -478,6 +493,8 @@ func Test_gitlabTargetManager_Reconcile_Registration_Update(t *testing.T) {
 // Test_gitlabTargetManager_Reconcile_failure tests that the Reconcile method
 // will handle API failures gracefully
 func Test_gitlabTargetManager_Reconcile_failure(t *testing.T) {
+	test.MarkAsShort(t)
+
 	tests := []struct {
 		name       string
 		registered bool
@@ -542,6 +559,8 @@ func Test_gitlabTargetManager_Reconcile_failure(t *testing.T) {
 // Test_gitlabTargetManager_Reconcile_Context_Canceled tests that the Reconcile
 // method will shutdown gracefully when the context is canceled.
 func Test_gitlabTargetManager_Reconcile_Context_Canceled(t *testing.T) {
+	test.MarkAsShort(t)
+
 	glmock := remotemock.New(
 		[]checks.GlobalTarget{
 			{
@@ -582,6 +601,8 @@ func Test_gitlabTargetManager_Reconcile_Context_Canceled(t *testing.T) {
 // Test_gitlabTargetManager_Reconcile_Context_Done tests that the Reconcile
 // method will shut down gracefully when the context is done.
 func Test_gitlabTargetManager_Reconcile_Context_Done(t *testing.T) {
+	test.MarkAsShort(t)
+
 	glmock := remotemock.New(
 		[]checks.GlobalTarget{
 			{
@@ -620,6 +641,8 @@ func Test_gitlabTargetManager_Reconcile_Context_Done(t *testing.T) {
 // Test_gitlabTargetManager_Reconcile_Shutdown tests that the Reconcile
 // method will shut down gracefully when the Shutdown method is called.
 func Test_gitlabTargetManager_Reconcile_Shutdown(t *testing.T) {
+	test.MarkAsShort(t)
+
 	glmock := remotemock.New(
 		[]checks.GlobalTarget{
 			{
@@ -663,6 +686,8 @@ func Test_gitlabTargetManager_Reconcile_Shutdown(t *testing.T) {
 // method will fail the graceful shutdown when the Shutdown method is called
 // and the unregistering fails.
 func Test_gitlabTargetManager_Reconcile_Shutdown_Fail_Unregister(t *testing.T) {
+	test.MarkAsShort(t)
+
 	glmock := remotemock.New(
 		[]checks.GlobalTarget{
 			{
@@ -707,6 +732,8 @@ func Test_gitlabTargetManager_Reconcile_Shutdown_Fail_Unregister(t *testing.T) {
 // Test_gitlabTargetManager_Reconcile_No_Registration tests that the Reconcile
 // method will not register the instance if the registration interval is 0
 func Test_gitlabTargetManager_Reconcile_No_Registration(t *testing.T) {
+	test.MarkAsShort(t)
+
 	glmock := remotemock.New(
 		[]checks.GlobalTarget{
 			{
@@ -745,6 +772,8 @@ func Test_gitlabTargetManager_Reconcile_No_Registration(t *testing.T) {
 // Test_gitlabTargetManager_Reconcile_No_Update tests that the Reconcile
 // method will not update the registration if the update interval is 0
 func Test_gitlabTargetManager_Reconcile_No_Update(t *testing.T) {
+	test.MarkAsShort(t)
+
 	glmock := remotemock.New(
 		[]checks.GlobalTarget{
 			{
@@ -787,6 +816,8 @@ func Test_gitlabTargetManager_Reconcile_No_Update(t *testing.T) {
 // method will not register the instance if the registration interval is 0
 // and will not update the registration if the update interval is 0
 func Test_gitlabTargetManager_Reconcile_No_Registration_No_Update(t *testing.T) {
+	test.MarkAsShort(t)
+
 	glmock := remotemock.New(
 		[]checks.GlobalTarget{
 			{
