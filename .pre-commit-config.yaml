@@ -36,3 +36,8 @@ repos:
       - id: helm-docs-built
         args:
           - --chart-search-root=chart
+
+  - repo: https://github.com/fsfe/reuse-tool
+    rev: v5.0.2
+    hooks:
+      - id: reuse
