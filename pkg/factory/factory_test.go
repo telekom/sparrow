@@ -23,10 +23,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/caas-team/sparrow/pkg/checks"
-	"github.com/caas-team/sparrow/pkg/checks/health"
-	"github.com/caas-team/sparrow/pkg/checks/latency"
-	"github.com/caas-team/sparrow/pkg/checks/runtime"
+	"github.com/telekom/sparrow/pkg/checks"
+	"github.com/telekom/sparrow/pkg/checks/health"
+	"github.com/telekom/sparrow/pkg/checks/latency"
+	"github.com/telekom/sparrow/pkg/checks/runtime"
 )
 
 var (

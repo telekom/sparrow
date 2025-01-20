@@ -25,11 +25,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/caas-team/sparrow/internal/helper"
-	"github.com/caas-team/sparrow/internal/logger"
-	"github.com/caas-team/sparrow/pkg/checks"
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/telekom/sparrow/internal/helper"
+	"github.com/telekom/sparrow/internal/logger"
+	"github.com/telekom/sparrow/pkg/checks"
 )
 
 var (

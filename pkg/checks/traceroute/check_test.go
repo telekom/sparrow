@@ -25,8 +25,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/caas-team/sparrow/pkg/checks"
 	"github.com/google/go-cmp/cmp"
+	"github.com/telekom/sparrow/pkg/checks"
 	"go.opentelemetry.io/otel"
 )
 
