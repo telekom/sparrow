@@ -7,11 +7,11 @@ package runtime
 import (
 	"errors"
 
-	"github.com/caas-team/sparrow/pkg/checks"
-	"github.com/caas-team/sparrow/pkg/checks/dns"
-	"github.com/caas-team/sparrow/pkg/checks/health"
-	"github.com/caas-team/sparrow/pkg/checks/latency"
-	"github.com/caas-team/sparrow/pkg/checks/traceroute"
+	"github.com/telekom/sparrow/pkg/checks"
+	"github.com/telekom/sparrow/pkg/checks/dns"
+	"github.com/telekom/sparrow/pkg/checks/health"
+	"github.com/telekom/sparrow/pkg/checks/latency"
+	"github.com/telekom/sparrow/pkg/checks/traceroute"
 )
 
 // Config holds the runtime configuration

@@ -8,10 +8,10 @@ import (
 	"context"
 	"sync"
 
-	"github.com/caas-team/sparrow/pkg/checks"
-	"github.com/caas-team/sparrow/pkg/sparrow/targets/remote"
+	"github.com/telekom/sparrow/pkg/checks"
+	"github.com/telekom/sparrow/pkg/sparrow/targets/remote"
 
-	"github.com/caas-team/sparrow/internal/logger"
+	"github.com/telekom/sparrow/internal/logger"
 )
 
 type MockClient struct {

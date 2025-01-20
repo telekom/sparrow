@@ -8,25 +8,27 @@ A Helm chart to install Sparrow
 
 | Name | Email | Url |
 | ---- | ------ | --- |
-| eumel8 | <f.kloeker@telekom.de> | <https://www.telekom.com> |
 | y-eight | <maximilian.schubert@telekom.de> | <https://www.telekom.com> |
+| puffitos | <bruno.bressi@telekom.de> | <https://www.telekom.com> |
+| ntreml | <niklas.treml@telekom.de> | <https://www.telekom.com> |
+| lvlcn-t | <tom.vendolsky@telekom.de> | <https://www.telekom.com> |
 
 ## Source Code
 
-* <https://github.com/caas-team/sparrow>
+* <https://github.com/telekom/sparrow>
 
 ## Values
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | affinity | object | `{}` |  |
-| checksConfig | object | `{}` | Check configuration of the Sparrow read on runtime see: https://github.com/caas-team/sparrow?tab=readme-ov-file#checks |
+| checksConfig | object | `{}` | Check configuration of the Sparrow read on runtime see: https://github.com/telekom/sparrow?tab=readme-ov-file#checks |
 | env | object | `{}` |  |
 | envFromSecrets | list | `[]` | extra environment variables Allows you to set environment variables through secrets you defined outside of the helm chart Useful for sensitive information like the http loader token |
-| extraArgs | object | `{}` | Extra command line start parameters see: https://github.com/caas-team/sparrow/blob/main/docs/sparrow_run.md |
+| extraArgs | object | `{}` | Extra command line start parameters see: https://github.com/telekom/sparrow/blob/main/docs/sparrow_run.md |
 | fullnameOverride | string | `""` |  |
 | image.pullPolicy | string | `"IfNotPresent"` |  |
-| image.repository | string | `"ghcr.io/caas-team/sparrow"` |  |
+| image.repository | string | `"ghcr.io/telekom/sparrow"` |  |
 | image.tag | string | `""` | Overrides the image tag whose default is the chart appVersion. |
 | imagePullSecrets | list | `[]` |  |
 | ingress.annotations | object | `{}` |  |
@@ -64,7 +66,7 @@ A Helm chart to install Sparrow
 | serviceMonitor.interval | string | `"30s"` | Sets the scrape interval |
 | serviceMonitor.labels | object | `{}` | Additional label added to the service Monitor |
 | serviceMonitor.scrapeTimeout | string | `"5s"` | Sets the scrape timeout |
-| sparrowConfig | object | `{"loader":{"file":{"path":"/config/checks.yaml"},"interval":"30s","type":"file"},"name":"sparrow.com"}` | Sparrow configuration read on startup see: https://github.com/caas-team/sparrow/blob/main/docs/sparrow_run.md |
+| sparrowConfig | object | `{"loader":{"file":{"path":"/config/checks.yaml"},"interval":"30s","type":"file"},"name":"sparrow.com"}` | Sparrow configuration read on startup see: https://github.com/telekom/sparrow/blob/main/docs/sparrow_run.md |
 | startupProbe | object | `{"enabled":false,"failureThreshold":10,"initialDelaySeconds":10,"path":"/","periodSeconds":5,"successThreshold":1,"timeoutSeconds":1}` | Specifies the configuration for a startup probe to check if the sparrow application is started. Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/ |
 | tolerations | list | `[]` |  |
 

@@ -7,7 +7,7 @@ package traceroute
 import (
 	"time"
 
-	"github.com/caas-team/sparrow/pkg/checks"
+	"github.com/telekom/sparrow/pkg/checks"
 
 	"github.com/prometheus/client_golang/prometheus"
 )

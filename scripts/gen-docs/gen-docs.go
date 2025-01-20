@@ -10,9 +10,9 @@ import (
 	"fmt"
 	"os"
 
-	sparrowcmd "github.com/caas-team/sparrow/cmd"
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
+	sparrowcmd "github.com/telekom/sparrow/cmd"
 )
 
 func main() {

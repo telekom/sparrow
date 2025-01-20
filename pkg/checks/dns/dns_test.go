@@ -13,8 +13,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/caas-team/sparrow/pkg/checks"
-	"github.com/caas-team/sparrow/pkg/checks/health"
+	"github.com/telekom/sparrow/pkg/checks"
+	"github.com/telekom/sparrow/pkg/checks/health"
 
 	"github.com/stretchr/testify/assert"
 )

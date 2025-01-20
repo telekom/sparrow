@@ -7,11 +7,11 @@ package config
 import (
 	"time"
 
-	"github.com/caas-team/sparrow/pkg/sparrow/metrics"
-	"github.com/caas-team/sparrow/pkg/sparrow/targets"
+	"github.com/telekom/sparrow/pkg/sparrow/metrics"
+	"github.com/telekom/sparrow/pkg/sparrow/targets"
 
-	"github.com/caas-team/sparrow/internal/helper"
-	"github.com/caas-team/sparrow/pkg/api"
+	"github.com/telekom/sparrow/internal/helper"
+	"github.com/telekom/sparrow/pkg/api"
 )
 
 type Config struct {

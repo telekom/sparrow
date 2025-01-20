@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/caas-team/sparrow/internal/helper"
-	"github.com/caas-team/sparrow/pkg/checks"
+	"github.com/telekom/sparrow/internal/helper"
+	"github.com/telekom/sparrow/pkg/checks"
 )
 
 const (

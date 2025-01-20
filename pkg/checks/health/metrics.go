@@ -5,8 +5,8 @@
 package health
 
 import (
-	"github.com/caas-team/sparrow/pkg/checks"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/telekom/sparrow/pkg/checks"
 )
 
 // metrics contains the metric collectors for the Health check

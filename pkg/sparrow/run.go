@@ -13,13 +13,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/caas-team/sparrow/internal/logger"
-	"github.com/caas-team/sparrow/pkg/api"
-	"github.com/caas-team/sparrow/pkg/checks/runtime"
-	"github.com/caas-team/sparrow/pkg/config"
-	"github.com/caas-team/sparrow/pkg/db"
-	"github.com/caas-team/sparrow/pkg/sparrow/metrics"
-	"github.com/caas-team/sparrow/pkg/sparrow/targets"
+	"github.com/telekom/sparrow/internal/logger"
+	"github.com/telekom/sparrow/pkg/api"
+	"github.com/telekom/sparrow/pkg/checks/runtime"
+	"github.com/telekom/sparrow/pkg/config"
+	"github.com/telekom/sparrow/pkg/db"
+	"github.com/telekom/sparrow/pkg/sparrow/metrics"
+	"github.com/telekom/sparrow/pkg/sparrow/targets"
 )
 
 const shutdownTimeout = time.Second * 90

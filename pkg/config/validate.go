@@ -11,7 +11,7 @@ import (
 	"net/url"
 	"regexp"
 
-	"github.com/caas-team/sparrow/internal/logger"
+	"github.com/telekom/sparrow/internal/logger"
 )
 
 // Validate validates the startup config

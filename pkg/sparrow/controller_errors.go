@@ -7,7 +7,7 @@ package sparrow
 import (
 	"fmt"
 
-	"github.com/caas-team/sparrow/pkg/checks"
+	"github.com/telekom/sparrow/pkg/checks"
 )
 
 type ErrRunningCheck struct {

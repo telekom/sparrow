@@ -15,12 +15,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/caas-team/sparrow/internal/helper"
-	"github.com/caas-team/sparrow/internal/logger"
-	"github.com/caas-team/sparrow/pkg/checks/health"
-	"github.com/caas-team/sparrow/pkg/checks/runtime"
 	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/require"
+	"github.com/telekom/sparrow/internal/helper"
+	"github.com/telekom/sparrow/internal/logger"
+	"github.com/telekom/sparrow/pkg/checks/health"
+	"github.com/telekom/sparrow/pkg/checks/runtime"
 	"gopkg.in/yaml.v3"
 )
 

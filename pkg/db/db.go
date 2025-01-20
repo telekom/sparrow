@@ -7,7 +7,7 @@ package db
 import (
 	"sync"
 
-	"github.com/caas-team/sparrow/pkg/checks"
+	"github.com/telekom/sparrow/pkg/checks"
 )
 
 type DB interface {

@@ -12,9 +12,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/caas-team/sparrow/pkg/checks"
-	"github.com/caas-team/sparrow/pkg/sparrow/targets/remote"
 	"github.com/jarcoal/httpmock"
+	"github.com/telekom/sparrow/pkg/checks"
+	"github.com/telekom/sparrow/pkg/sparrow/targets/remote"
 )
 
 func Test_gitlab_fetchFileList(t *testing.T) {

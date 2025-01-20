@@ -12,9 +12,9 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
-	"github.com/caas-team/sparrow/internal/logger"
-	"github.com/caas-team/sparrow/pkg/api"
 	"github.com/go-chi/chi/v5"
+	"github.com/telekom/sparrow/internal/logger"
+	"github.com/telekom/sparrow/pkg/api"
 	"gopkg.in/yaml.v3"
 )
 

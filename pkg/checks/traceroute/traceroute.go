@@ -20,8 +20,8 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sys/unix"
 
-	"github.com/caas-team/sparrow/internal/helper"
-	"github.com/caas-team/sparrow/internal/logger"
+	"github.com/telekom/sparrow/internal/helper"
+	"github.com/telekom/sparrow/internal/logger"
 	"golang.org/x/net/icmp"
 	"golang.org/x/net/ipv4"
 	"golang.org/x/net/ipv6"

@@ -9,7 +9,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/caas-team/sparrow/pkg/checks"
+	"github.com/telekom/sparrow/pkg/checks"
 )
 
 func TestInMemory_Save(t *testing.T) {

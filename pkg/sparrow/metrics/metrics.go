@@ -9,9 +9,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/caas-team/sparrow/internal/logger"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
+	"github.com/telekom/sparrow/internal/logger"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"

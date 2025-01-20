@@ -11,7 +11,7 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/caas-team/sparrow/pkg/checks"
+	"github.com/telekom/sparrow/pkg/checks"
 )
 
 // Interactor handles the interaction with the remote state backend

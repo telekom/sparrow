@@ -5,8 +5,8 @@
 package latency
 
 import (
-	"github.com/caas-team/sparrow/pkg/checks"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/telekom/sparrow/pkg/checks"
 )
 
 // metrics defines the metric collectors of the latency check

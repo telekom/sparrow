@@ -8,9 +8,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/caas-team/sparrow/internal/logger"
-	"github.com/caas-team/sparrow/pkg/checks"
-	"github.com/caas-team/sparrow/pkg/sparrow/targets/interactor"
+	"github.com/telekom/sparrow/internal/logger"
+	"github.com/telekom/sparrow/pkg/checks"
+	"github.com/telekom/sparrow/pkg/sparrow/targets/interactor"
 )
 
 // TargetManager handles the management of globalTargets for

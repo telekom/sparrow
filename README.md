@@ -8,8 +8,8 @@ SPDX-License-Identifier: CC-BY-4.0
 
 <!-- markdownlint-disable MD033 -->
 <p align="center">
-  <a href="/../../commits/" title="Last Commit"><img alt="Last Commit" src="https://img.shields.io/github/last-commit/caas-team/sparrow?style=flat"></a>
-  <a href="/../../issues" title="Open Issues"><img alt="Open Issues" src="https://img.shields.io/github/issues/caas-team/sparrow?style=flat"></a>
+  <a href="/../../commits/" title="Last Commit"><img alt="Last Commit" src="https://img.shields.io/github/last-commit/telekom/sparrow?style=flat"></a>
+  <a href="/../../issues" title="Open Issues"><img alt="Open Issues" src="https://img.shields.io/github/issues/telekom/sparrow?style=flat"></a>
   <a href="./LICENSE" title="License"><img alt="License" src="https://img.shields.io/badge/License-Apache%202.0-green.svg?style=flat"></a>
 </p>
 <!-- markdownlint-enable MD033 -->
@@ -80,7 +80,7 @@ ensuring robust monitoring and quick detection of potential issues.
 
 The `sparrow` is provided as a small binary & a container image.
 
-Please refer to the [release notes](https://github.com/caas-team/sparrow/releases) to get the latest version.
+Please refer to the [release notes](https://github.com/telekom/sparrow/releases) to get the latest version.
 
 ### Binary
 
@@ -94,8 +94,8 @@ export RELEASE_VERSION=0.5.0
 Download the binary:
 
 ```sh
-curl https://github.com/caas-team/sparrow/releases/download/v${RELEASE_VERSION}/sparrow_${RELEASE_VERSION}_linux_amd64.tar.gz -Lo sparrow.tar.gz
-curl https://github.com/caas-team/sparrow/releases/download/v${RELEASE_VERSION}/sparrow_${RELEASE_VERSION}_checksums.txt -Lo checksums.txt
+curl https://github.com/telekom/sparrow/releases/download/v${RELEASE_VERSION}/sparrow_${RELEASE_VERSION}_linux_amd64.tar.gz -Lo sparrow.tar.gz
+curl https://github.com/telekom/sparrow/releases/download/v${RELEASE_VERSION}/sparrow_${RELEASE_VERSION}_checksums.txt -Lo checksums.txt
 ```
 
 Extract the binary:
@@ -106,15 +106,15 @@ tar -xf sparrow.tar.gz
 
 ### Container Image
 
-The [sparrow container images](https://github.com/caas-team/sparrow/pkgs/container/sparrow) for
-dedicated [release](https://github.com/caas-team/sparrow/releases) can be found in the GitHub registry.
+The [sparrow container images](https://github.com/telekom/sparrow/pkgs/container/sparrow) for
+dedicated [release](https://github.com/telekom/sparrow/releases) can be found in the GitHub registry.
 
 ### Helm
 
 Sparrow can be installed via Helm Chart. The chart is available in the GitHub registry:
 
 ```sh
-helm -n sparrow upgrade -i sparrow oci://ghcr.io/caas-team/charts/sparrow --create-namespace
+helm -n sparrow upgrade -i sparrow oci://ghcr.io/telekom/charts/sparrow --create-namespace
 ```
 
 The default settings are suitable for a local configuration. With the default Helm values, the sparrow loader uses a
@@ -158,12 +158,12 @@ sparrow run --sparrowName sparrow.telekom.de
 
 ### Image
 
-Run a `sparrow` container by using e.g. `docker run ghcr.io/caas-team/sparrow`.
+Run a `sparrow` container by using e.g. `docker run ghcr.io/telekom/sparrow`.
 
-Pass the available configuration arguments to the container e.g. `docker run ghcr.io/caas-team/sparrow --help`.
+Pass the available configuration arguments to the container e.g. `docker run ghcr.io/telekom/sparrow --help`.
 
 Start the instance using a mounted startup configuration file
-e.g. `docker run -v /config:/config  ghcr.io/caas-team/sparrow --config /config/config.yaml`.
+e.g. `docker run -v /config:/config  ghcr.io/telekom/sparrow --config /config/config.yaml`.
 
 ## Configuration
 
