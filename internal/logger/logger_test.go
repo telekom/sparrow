@@ -27,7 +27,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/caas-team/sparrow/test"
+	"github.com/telekom/sparrow/test"
 )
 
 func TestNewLogger(t *testing.T) {

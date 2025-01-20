@@ -19,11 +19,11 @@
 package main
 
 import (
-	"github.com/caas-team/sparrow/cmd"
-	"github.com/caas-team/sparrow/pkg"
+	"github.com/telekom/sparrow/cmd"
+	"github.com/telekom/sparrow/pkg"
 )
 
-// Version is the current version of sparrow
+// version is the current version of sparrow
 // It is set at build time by using -ldflags "-X main.version=x.x.x"
 var version string
 

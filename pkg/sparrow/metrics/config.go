@@ -22,7 +22,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/caas-team/sparrow/internal/logger"
+	"github.com/telekom/sparrow/internal/logger"
 )
 
 // Config holds the configuration for OpenTelemetry

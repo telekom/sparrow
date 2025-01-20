@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/caas-team/sparrow/pkg/config"
-	"github.com/caas-team/sparrow/pkg/sparrow"
-	"github.com/caas-team/sparrow/test/framework/builder"
+	"github.com/telekom/sparrow/pkg/config"
+	"github.com/telekom/sparrow/pkg/sparrow"
+	"github.com/telekom/sparrow/test/framework/builder"
 )
 
 // Runner is a test runner.

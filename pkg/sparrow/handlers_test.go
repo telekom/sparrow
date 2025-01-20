@@ -29,13 +29,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/caas-team/sparrow/pkg/checks"
-	"github.com/caas-team/sparrow/pkg/checks/runtime"
-	"github.com/caas-team/sparrow/pkg/db"
-	"github.com/caas-team/sparrow/test"
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/go-chi/chi/v5"
 	"github.com/goccy/go-yaml"
+	"github.com/telekom/sparrow/pkg/checks"
+	"github.com/telekom/sparrow/pkg/checks/runtime"
+	"github.com/telekom/sparrow/pkg/db"
+	"github.com/telekom/sparrow/test"
 )
 
 func TestSparrow_handleOpenAPI(t *testing.T) {

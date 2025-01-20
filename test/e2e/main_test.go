@@ -6,11 +6,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/caas-team/sparrow/pkg/checks"
-	"github.com/caas-team/sparrow/pkg/config"
-	"github.com/caas-team/sparrow/test"
-	"github.com/caas-team/sparrow/test/framework"
-	"github.com/caas-team/sparrow/test/framework/builder"
+	"github.com/telekom/sparrow/pkg/checks"
+	"github.com/telekom/sparrow/pkg/config"
+	"github.com/telekom/sparrow/test"
+	"github.com/telekom/sparrow/test/framework"
+	"github.com/telekom/sparrow/test/framework/builder"
 )
 
 const (

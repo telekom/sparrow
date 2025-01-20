@@ -23,9 +23,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/caas-team/sparrow/internal/helper"
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/telekom/sparrow/internal/helper"
 )
 
 // DefaultRetry provides a default configuration for the retry mechanism

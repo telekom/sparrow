@@ -21,8 +21,8 @@ package dns
 import (
 	"testing"
 
-	"github.com/caas-team/sparrow/test"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/telekom/sparrow/test"
 )
 
 func TestMetrics_GetCollectors(t *testing.T) {

@@ -26,8 +26,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/caas-team/sparrow/test"
 	"github.com/go-chi/chi/v5"
+	"github.com/telekom/sparrow/test"
 )
 
 func TestAPI_Run(t *testing.T) {

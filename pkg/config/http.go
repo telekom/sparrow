@@ -26,10 +26,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/caas-team/sparrow/internal/helper"
-	"github.com/caas-team/sparrow/internal/logger"
-	"github.com/caas-team/sparrow/pkg/checks/runtime"
 	"github.com/goccy/go-yaml"
+	"github.com/telekom/sparrow/internal/helper"
+	"github.com/telekom/sparrow/internal/logger"
+	"github.com/telekom/sparrow/pkg/checks/runtime"
 )
 
 type HttpLoader struct {

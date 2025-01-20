@@ -7,15 +7,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/caas-team/sparrow/internal/helper"
-	"github.com/caas-team/sparrow/pkg/api"
-	"github.com/caas-team/sparrow/pkg/checks"
-	"github.com/caas-team/sparrow/pkg/config"
-	"github.com/caas-team/sparrow/pkg/sparrow/metrics"
-	"github.com/caas-team/sparrow/pkg/sparrow/targets"
-	"github.com/caas-team/sparrow/pkg/sparrow/targets/interactor"
-	"github.com/caas-team/sparrow/pkg/sparrow/targets/remote/gitlab"
 	"github.com/goccy/go-yaml"
+	"github.com/telekom/sparrow/internal/helper"
+	"github.com/telekom/sparrow/pkg/api"
+	"github.com/telekom/sparrow/pkg/checks"
+	"github.com/telekom/sparrow/pkg/config"
+	"github.com/telekom/sparrow/pkg/sparrow/metrics"
+	"github.com/telekom/sparrow/pkg/sparrow/targets"
+	"github.com/telekom/sparrow/pkg/sparrow/targets/interactor"
+	"github.com/telekom/sparrow/pkg/sparrow/targets/remote/gitlab"
 )
 
 type SparrowConfig struct{ cfg config.Config }

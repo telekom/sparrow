@@ -26,10 +26,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/caas-team/sparrow/pkg/checks"
-	"github.com/caas-team/sparrow/test"
+	"github.com/telekom/sparrow/pkg/checks"
+	"github.com/telekom/sparrow/test"
 
-	remotemock "github.com/caas-team/sparrow/pkg/sparrow/targets/remote/test"
+	remotemock "github.com/telekom/sparrow/pkg/sparrow/targets/remote/test"
 )
 
 const (

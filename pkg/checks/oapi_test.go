@@ -22,8 +22,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/caas-team/sparrow/test"
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/telekom/sparrow/test"
 )
 
 func TestOpenapiFromPerfData(t *testing.T) {

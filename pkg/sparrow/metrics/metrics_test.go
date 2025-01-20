@@ -23,8 +23,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/caas-team/sparrow/test"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/telekom/sparrow/test"
 	"go.opentelemetry.io/otel"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )

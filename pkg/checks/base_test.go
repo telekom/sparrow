@@ -3,8 +3,8 @@ package checks
 import (
 	"testing"
 
-	"github.com/caas-team/sparrow/test"
 	"github.com/stretchr/testify/assert"
+	"github.com/telekom/sparrow/test"
 )
 
 func TestBase_Shutdown(t *testing.T) {

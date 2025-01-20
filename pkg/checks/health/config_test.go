@@ -22,7 +22,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/caas-team/sparrow/test"
+	"github.com/telekom/sparrow/test"
 )
 
 func TestConfig_Validate(t *testing.T) {

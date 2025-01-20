@@ -1,4 +1,4 @@
-module github.com/caas-team/sparrow
+module github.com/telekom/sparrow
 
 go 1.23
 

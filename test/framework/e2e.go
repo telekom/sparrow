@@ -17,13 +17,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/caas-team/sparrow/pkg/checks"
-	"github.com/caas-team/sparrow/pkg/config"
-	"github.com/caas-team/sparrow/pkg/sparrow"
-	"github.com/caas-team/sparrow/test/framework/builder"
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/getkin/kin-openapi/routers"
 	"github.com/getkin/kin-openapi/routers/gorillamux"
+	"github.com/telekom/sparrow/pkg/checks"
+	"github.com/telekom/sparrow/pkg/config"
+	"github.com/telekom/sparrow/pkg/sparrow"
+	"github.com/telekom/sparrow/test/framework/builder"
 )
 
 var _ Runner = (*E2E)(nil)
@@ -138,7 +138,7 @@ func (t *E2E) AwaitStartup(u string, failureTimeout time.Duration) *E2E {
 		resp, err := http.DefaultClient.Do(req)
 		if err == nil && resp.StatusCode == http.StatusOK {
 			t.t.Logf("%s is ready after %v", u, time.Since(start))
-			resp.Body.Close()
+			_ = resp.Body.Close()
 			return t
 		}
 		if time.Now().After(deadline) {
@@ -354,7 +354,7 @@ func (a *e2eHttpAsserter) assertSchema(req *http.Request, resp *http.Response) e
 	if err != nil {
 		return fmt.Errorf("failed to read response body: %w", err)
 	}
-	resp.Body.Close()
+	_ = resp.Body.Close()
 	resp.Body = io.NopCloser(bytes.NewReader(data))
 
 	responseRef := route.Operation.Responses.Status(resp.StatusCode)

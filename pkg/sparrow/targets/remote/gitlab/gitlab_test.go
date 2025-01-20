@@ -26,11 +26,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/caas-team/sparrow/pkg/checks"
-	"github.com/caas-team/sparrow/pkg/sparrow/targets/remote"
-	"github.com/caas-team/sparrow/test"
-
 	"github.com/jarcoal/httpmock"
+	"github.com/telekom/sparrow/pkg/checks"
+	"github.com/telekom/sparrow/pkg/sparrow/targets/remote"
+	"github.com/telekom/sparrow/test"
 )
 
 func Test_gitlab_fetchFileList(t *testing.T) {

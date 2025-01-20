@@ -25,7 +25,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/caas-team/sparrow/test"
+	"github.com/telekom/sparrow/test"
 )
 
 func TestRetry(t *testing.T) {

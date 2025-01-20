@@ -25,14 +25,14 @@ import (
 	"net/http"
 	stdruntime "runtime"
 
-	"github.com/caas-team/sparrow/internal/logger"
-	"github.com/caas-team/sparrow/pkg"
-	"github.com/caas-team/sparrow/pkg/checks"
-	"github.com/caas-team/sparrow/pkg/checks/runtime"
-	"github.com/caas-team/sparrow/pkg/db"
-	"github.com/caas-team/sparrow/pkg/factory"
-	"github.com/caas-team/sparrow/pkg/sparrow/metrics"
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/telekom/sparrow/internal/logger"
+	"github.com/telekom/sparrow/pkg"
+	"github.com/telekom/sparrow/pkg/checks"
+	"github.com/telekom/sparrow/pkg/checks/runtime"
+	"github.com/telekom/sparrow/pkg/db"
+	"github.com/telekom/sparrow/pkg/factory"
+	"github.com/telekom/sparrow/pkg/sparrow/metrics"
 )
 
 // ChecksController is responsible for managing checks.

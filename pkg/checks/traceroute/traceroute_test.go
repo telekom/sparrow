@@ -23,7 +23,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/caas-team/sparrow/test"
+	"github.com/telekom/sparrow/test"
 )
 
 func TestHopAddress_String(t *testing.T) {

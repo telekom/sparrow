@@ -26,11 +26,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/caas-team/sparrow/pkg/checks/health"
-	"github.com/caas-team/sparrow/pkg/checks/runtime"
-	"github.com/caas-team/sparrow/pkg/config/test"
-	testUtils "github.com/caas-team/sparrow/test"
 	"github.com/goccy/go-yaml"
+	"github.com/telekom/sparrow/pkg/checks/health"
+	"github.com/telekom/sparrow/pkg/checks/runtime"
+	"github.com/telekom/sparrow/pkg/config/test"
+	testUtils "github.com/telekom/sparrow/test"
 )
 
 func TestNewFileLoader(t *testing.T) {

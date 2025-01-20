@@ -29,14 +29,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/caas-team/sparrow/internal/helper"
-	"github.com/caas-team/sparrow/internal/logger"
-	"github.com/caas-team/sparrow/pkg/checks/health"
-	"github.com/caas-team/sparrow/pkg/checks/runtime"
-	"github.com/caas-team/sparrow/test"
 	"github.com/goccy/go-yaml"
 	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/require"
+	"github.com/telekom/sparrow/internal/helper"
+	"github.com/telekom/sparrow/internal/logger"
+	"github.com/telekom/sparrow/pkg/checks/health"
+	"github.com/telekom/sparrow/pkg/checks/runtime"
+	"github.com/telekom/sparrow/test"
 )
 
 func TestHttpLoader_GetRuntimeConfig(t *testing.T) {
