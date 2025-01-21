@@ -1,3 +1,4 @@
+version: 2
 project_name: sparrow
 builds:
   - env: [CGO_ENABLED=0]
@@ -11,10 +12,10 @@ builds:
       - arm64
 dockers:
   - image_templates:
-      - "ghcr.io/caas-team/sparrow:latest"
-      - "ghcr.io/caas-team/sparrow:{{ .Tag }}"
-      - "ghcr.io/caas-team/sparrow:v{{ .Major }}.{{ .Minor }}"
-      - "ghcr.io/caas-team/sparrow:v{{ .Major }}"
+      - "ghcr.io/telekom/sparrow:latest"
+      - "ghcr.io/telekom/sparrow:{{ .Tag }}"
+      - "ghcr.io/telekom/sparrow:v{{ .Major }}.{{ .Minor }}"
+      - "ghcr.io/telekom/sparrow:v{{ .Major }}"
       - "mtr.devops.telekom.de/sparrow/sparrow:latest"
       - "mtr.devops.telekom.de/sparrow/sparrow:{{ .Tag }}"
       - "mtr.devops.telekom.de/sparrow/sparrow:v{{ .Major }}.{{ .Minor }}"
@@ -24,7 +25,7 @@ dockers:
       - --label=org.opencontainers.image.title={{ .ProjectName }}
       - --label=org.opencontainers.image.description={{ .ProjectName }}
       - --label=org.opencontainers.image.url=https://caas.telekom.de
-      - --label=org.opencontainers.image.source=https://github.com/caas-team/sparrow
+      - --label=org.opencontainers.image.source=https://github.com/telekom/sparrow
       - --label=org.opencontainers.image.version={{ .Version }}
       - --label=org.opencontainers.image.created={{ .Timestamp }}
       - --label=org.opencontainers.image.revision={{ .FullCommit }}
@@ -33,9 +34,14 @@ nfpms:
   - maintainer: CaaS <opensource@telekom.de>
     description: |-
       Monitoring tool to gather infrastructure network information
-    homepage: https://github.com/caas-team
+    homepage: https://github.com/telekom
     license: Apache 2.0
     formats:
       - deb
       - rpm
       - apk
+sboms:
+  - id: archive
+    artifacts: archive
+  - id: source
+    artifacts: source

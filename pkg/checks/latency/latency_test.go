@@ -26,7 +26,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/caas-team/sparrow/pkg/checks"
+	"github.com/telekom/sparrow/pkg/checks"
 
 	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/assert"

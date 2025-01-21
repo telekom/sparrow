@@ -24,8 +24,8 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/caas-team/sparrow/internal/helper"
-	"github.com/caas-team/sparrow/pkg/checks"
+	"github.com/telekom/sparrow/internal/helper"
+	"github.com/telekom/sparrow/pkg/checks"
 )
 
 // Config is the configuration for the traceroute check

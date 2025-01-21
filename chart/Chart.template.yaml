@@ -4,9 +4,9 @@ description: A Helm chart to install Sparrow
 type: application
 keywords:
   - monitoring
-icon: https://github.com/caas-team/sparrow/blob/main/docs/img/sparrow.png
+icon: https://github.com/telekom/sparrow/blob/main/docs/img/sparrow.png
 sources:
-  - https://github.com/caas-team/sparrow
+  - https://github.com/telekom/sparrow
 maintainers:
   - name: y-eight
     email: maximilian.schubert@telekom.de
@@ -14,7 +14,7 @@ maintainers:
   - name: puffitos
     email: bruno.bressi@telekom.de
     url: https://www.telekom.com
-  - name: niklastreml
+  - name: ntreml
     email: niklas.treml@telekom.de
     url: https://www.telekom.com
   - name: lvlcn-t
