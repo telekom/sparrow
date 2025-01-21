@@ -10,7 +10,6 @@ keywords:
   - monitoring
 version: 0.0.4
 appVersion: "v0.5.0"
-icon: https://github.com/telekom/sparrow/blob/main/docs/img/sparrow.png
 sources:
   - https://github.com/telekom/sparrow
 maintainers:
