@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+version: 2
 project_name: sparrow
 builds:
   - env: [CGO_ENABLED=0]
@@ -43,3 +44,8 @@ nfpms:
       - deb
       - rpm
       - apk
+sboms:
+  - id: archive
+    artifacts: archive
+  - id: source
+    artifacts: source
