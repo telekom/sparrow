@@ -287,6 +287,74 @@ func TestChecksController_Reconcile(t *testing.T) {
 	}
 }
 
+// TestChecksController_Reconcile_Update tests the update of the checks
+// when the runtime configuration changes.
+func TestChecksController_Reconcile_Update(t *testing.T) {
+	ctx, cancel := logger.NewContextWithLogger(context.Background())
+	defer cancel()
+
+	tests := []struct {
+		name             string
+		checks           []checks.Check
+		newRuntimeConfig runtime.Config
+	}{
+		{
+			name: "update health check",
+			checks: []checks.Check{
+				health.NewCheck(),
+			},
+			newRuntimeConfig: runtime.Config{
+				Health: &health.Config{
+					Targets:  []string{"https://new.com"},
+					Interval: 200 * time.Millisecond,
+					Timeout:  1000 * time.Millisecond,
+				},
+			},
+		},
+		{
+			name: "update health & latency check",
+			checks: []checks.Check{
+				health.NewCheck(),
+				latency.NewCheck(),
+			},
+			newRuntimeConfig: runtime.Config{
+				Health: &health.Config{
+					Targets:  []string{"https://new.com"},
+					Interval: 200 * time.Millisecond,
+					Timeout:  1000 * time.Millisecond,
+				},
+				Latency: &latency.Config{
+					Targets:  []string{"https://new.com"},
+					Interval: 200 * time.Millisecond,
+					Timeout:  1000 * time.Millisecond,
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cc := NewChecksController(db.NewInMemory(), metrics.New(metrics.Config{}))
+			for _, c := range tt.checks {
+				cc.checks.Add(c)
+			}
+
+			cc.Reconcile(ctx, tt.newRuntimeConfig)
+
+			for _, c := range cc.checks.Iter() {
+				switch c.GetConfig().For() {
+				case health.CheckName:
+					hc := c.(*health.Health)
+					assert.Equal(t, tt.newRuntimeConfig.Health.Targets, hc.GetConfig().(*health.Config).Targets)
+				case latency.CheckName:
+					lc := c.(*latency.Latency)
+					assert.Equal(t, tt.newRuntimeConfig.Latency.Targets, lc.GetConfig().(*latency.Config).Targets)
+				}
+			}
+		})
+	}
+}
+
 func TestChecksController_RegisterCheck(t *testing.T) {
 	tests := []struct {
 		name  string

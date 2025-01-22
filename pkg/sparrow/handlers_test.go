@@ -129,7 +129,7 @@ func TestSparrow_handleCheckMetrics(t *testing.T) {
 			}
 
 			s.handleCheckMetrics(w, r)
-			resp := w.Result() //nolint:bodyclose
+			resp := w.Result()
 			body, _ := io.ReadAll(resp.Body)
 
 			if tt.wantCode == http.StatusOK {
