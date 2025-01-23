@@ -22,7 +22,7 @@ import (
 	"slices"
 	"sync"
 
-	"github.com/caas-team/sparrow/pkg/checks"
+	"github.com/telekom/sparrow/pkg/checks"
 )
 
 // Checks holds all the checks.

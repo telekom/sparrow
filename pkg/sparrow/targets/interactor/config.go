@@ -19,8 +19,8 @@
 package interactor
 
 import (
-	"github.com/caas-team/sparrow/pkg/sparrow/targets/remote"
-	"github.com/caas-team/sparrow/pkg/sparrow/targets/remote/gitlab"
+	"github.com/telekom/sparrow/pkg/sparrow/targets/remote"
+	"github.com/telekom/sparrow/pkg/sparrow/targets/remote/gitlab"
 )
 
 // Config contains the configuration for the remote interactor

@@ -24,7 +24,7 @@ import (
 	"math"
 	"time"
 
-	"github.com/caas-team/sparrow/internal/logger"
+	"github.com/telekom/sparrow/internal/logger"
 )
 
 type RetryConfig struct {

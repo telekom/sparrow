@@ -25,17 +25,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/caas-team/sparrow/internal/logger"
-	"github.com/caas-team/sparrow/pkg/checks"
-	"github.com/caas-team/sparrow/pkg/checks/dns"
-	"github.com/caas-team/sparrow/pkg/checks/health"
-	"github.com/caas-team/sparrow/pkg/checks/latency"
-	"github.com/caas-team/sparrow/pkg/checks/runtime"
-	"github.com/caas-team/sparrow/pkg/db"
-	"github.com/caas-team/sparrow/pkg/sparrow/metrics"
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/assert"
+	"github.com/telekom/sparrow/internal/logger"
+	"github.com/telekom/sparrow/pkg/checks"
+	"github.com/telekom/sparrow/pkg/checks/dns"
+	"github.com/telekom/sparrow/pkg/checks/health"
+	"github.com/telekom/sparrow/pkg/checks/latency"
+	"github.com/telekom/sparrow/pkg/checks/runtime"
+	"github.com/telekom/sparrow/pkg/db"
+	"github.com/telekom/sparrow/pkg/sparrow/metrics"
 )
 
 func TestRun_CheckRunError(t *testing.T) {

@@ -23,8 +23,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/caas-team/sparrow/internal/helper"
-	"github.com/caas-team/sparrow/pkg/api"
+	"github.com/telekom/sparrow/internal/helper"
+	"github.com/telekom/sparrow/pkg/api"
 )
 
 func TestConfig_Validate(t *testing.T) {

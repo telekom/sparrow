@@ -5,7 +5,7 @@
 replicaCount: 1
 
 image:
-  repository: ghcr.io/caas-team/sparrow
+  repository: ghcr.io/telekom/sparrow
   pullPolicy: IfNotPresent
   # -- Overrides the image tag whose default is the chart appVersion.
   tag: ""
@@ -127,7 +127,7 @@ tolerations: []
 affinity: {}
 
 # -- Extra command line start parameters
-# see: https://github.com/caas-team/sparrow/blob/main/docs/sparrow_run.md
+# see: https://github.com/telekom/sparrow/blob/main/docs/sparrow_run.md
 extraArgs: {}
 
 # -- extra environment variables
@@ -141,7 +141,7 @@ envFromSecrets:
   #     key: SPARROW_LOADER_HTTP_TOKEN
 
 # -- Sparrow configuration read on startup
-# see: https://github.com/caas-team/sparrow/blob/main/docs/sparrow_run.md
+# see: https://github.com/telekom/sparrow/blob/main/docs/sparrow_run.md
 sparrowConfig:
   name: sparrow.com
   loader:
@@ -176,7 +176,7 @@ sparrowConfig:
 #     projectId: ""
 
 # -- Check configuration of the Sparrow read on runtime
-# see: https://github.com/caas-team/sparrow?tab=readme-ov-file#checks
+# see: https://github.com/telekom/sparrow?tab=readme-ov-file#checks
 checksConfig: {}
 # health:
 #   interval: 15s
