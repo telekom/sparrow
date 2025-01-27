@@ -9,7 +9,6 @@ path = [
     ".idea/**",
     ".vscode/**",
     "**moq.go",
-    "docs/**",
     "go.sum"
 ]
 precedence = "aggregate"
