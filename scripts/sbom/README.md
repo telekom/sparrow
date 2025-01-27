@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2025 Deutsche Telekom IT GmbH
+
+SPDX-License-Identifier: CC-BY-4.0
+-->
+
 # Generate SBOM with Syft
 
 This doc can be used to generate a SBOM manually with [Syft](https://github.com/anchore/syft).

@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2025 Deutsche Telekom IT GmbH
+
+SPDX-License-Identifier: CC-BY-4.0
+-->
+
 ## sparrow completion zsh
 
 Generate the autocompletion script for zsh
