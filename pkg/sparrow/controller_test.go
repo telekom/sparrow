@@ -103,6 +103,58 @@ func TestRun_ContextCancellation(t *testing.T) {
 	}
 }
 
+// TestChecksController_Shutdown tests the shutdown of the ChecksController
+// when none, one or multiple checks are registered. The test checks that after shutdown no
+// checks are registered anymore (the checks slice is empty) and that the done channel is closed.
+func TestChecksController_Shutdown(t *testing.T) {
+	tests := []struct {
+		name   string
+		checks []checks.Check
+	}{
+		{
+			name:   "no checks registered",
+			checks: nil,
+		},
+		{
+			name:   "one check registered",
+			checks: []checks.Check{newMockCheck(t, "mockCheck")},
+		},
+		{
+			name: "multiple checks registered",
+			checks: []checks.Check{
+				newMockCheck(t, "mockCheck1"),
+				newMockCheck(t, "mockCheck2"),
+				newMockCheck(t, "mockCheck3"),
+				newMockCheck(t, "mockCheck4"),
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cc := NewChecksController(db.NewInMemory(), metrics.New(metrics.Config{}))
+
+			if tt.checks != nil {
+				for _, check := range tt.checks {
+					cc.RegisterCheck(context.Background(), check)
+				}
+			}
+
+			cc.Shutdown(context.Background())
+
+			select {
+			case <-cc.done:
+				if len(cc.checks.Iter()) != 0 {
+					t.Errorf("Expected no checks to be registered")
+				}
+				return
+			case <-time.After(time.Second):
+				t.Fatal("Expected done channel to be closed")
+			}
+		})
+	}
+}
+
 func TestChecksController_Reconcile(t *testing.T) {
 	ctx, cancel := logger.NewContextWithLogger(context.Background())
 	defer cancel()
@@ -231,6 +283,74 @@ func TestChecksController_Reconcile(t *testing.T) {
 
 			// check that the number of registered checks is correct
 			assert.Equal(t, len(tt.newRuntimeConfig.Iter()), len(cc.checks.Iter()))
+		})
+	}
+}
+
+// TestChecksController_Reconcile_Update tests the update of the checks
+// when the runtime configuration changes.
+func TestChecksController_Reconcile_Update(t *testing.T) {
+	ctx, cancel := logger.NewContextWithLogger(context.Background())
+	defer cancel()
+
+	tests := []struct {
+		name             string
+		checks           []checks.Check
+		newRuntimeConfig runtime.Config
+	}{
+		{
+			name: "update health check",
+			checks: []checks.Check{
+				health.NewCheck(),
+			},
+			newRuntimeConfig: runtime.Config{
+				Health: &health.Config{
+					Targets:  []string{"https://new.com"},
+					Interval: 200 * time.Millisecond,
+					Timeout:  1000 * time.Millisecond,
+				},
+			},
+		},
+		{
+			name: "update health & latency check",
+			checks: []checks.Check{
+				health.NewCheck(),
+				latency.NewCheck(),
+			},
+			newRuntimeConfig: runtime.Config{
+				Health: &health.Config{
+					Targets:  []string{"https://new.com"},
+					Interval: 200 * time.Millisecond,
+					Timeout:  1000 * time.Millisecond,
+				},
+				Latency: &latency.Config{
+					Targets:  []string{"https://new.com"},
+					Interval: 200 * time.Millisecond,
+					Timeout:  1000 * time.Millisecond,
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cc := NewChecksController(db.NewInMemory(), metrics.New(metrics.Config{}))
+			for _, c := range tt.checks {
+				cc.checks.Add(c)
+			}
+
+			cc.Reconcile(ctx, tt.newRuntimeConfig)
+
+			for _, c := range cc.checks.Iter() {
+				switch c.GetConfig().For() {
+				case health.CheckName:
+					hc := c.(*health.Health)
+					assert.Equal(t, tt.newRuntimeConfig.Health.Targets, hc.GetConfig().(*health.Config).Targets)
+				case latency.CheckName:
+					lc := c.(*latency.Latency)
+					assert.Equal(t, tt.newRuntimeConfig.Latency.Targets, lc.GetConfig().(*latency.Config).Targets)
+				}
+			}
 		})
 	}
 }
@@ -377,5 +497,32 @@ func TestGenerateCheckSpecs(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+// newMockCheck creates a new mock check with the given name.
+func newMockCheck(t *testing.T, name string) *checks.CheckMock {
+	t.Helper()
+	return &checks.CheckMock{
+		GetMetricCollectorsFunc: func() []prometheus.Collector {
+			return []prometheus.Collector{
+				prometheus.NewCounter(prometheus.CounterOpts{
+					Name: fmt.Sprintf("%s_mock_metric", name),
+				}),
+			}
+		},
+		NameFunc: func() string {
+			return name
+		},
+		RemoveLabelledMetricsFunc: nil,
+		RunFunc: func(ctx context.Context, cResult chan checks.ResultDTO) error {
+			t.Logf("Run called for check %s", name)
+			return nil
+		},
+		SchemaFunc: nil,
+		ShutdownFunc: func() {
+			t.Logf("Shutdown called for check %s", name)
+		},
+		UpdateConfigFunc: nil,
 	}
 }

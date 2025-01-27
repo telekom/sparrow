@@ -77,7 +77,7 @@ func TestAPI_Run(t *testing.T) {
 				rec := httptest.NewRecorder()
 				a.router.ServeHTTP(rec, req)
 
-				if status := rec.Result().StatusCode; status != tt.want.status { //nolint:bodyclose // closed in defer below
+				if status := rec.Result().StatusCode; status != tt.want.status {
 					t.Errorf("Handler for route %s returned wrong status code: got %v want %v", tt.want.path, status, tt.want.status)
 				}
 
