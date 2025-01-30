@@ -16,7 +16,7 @@ require (
 	github.com/spf13/viper v1.20.0-alpha.6
 	github.com/stretchr/testify v1.10.0
 	go.opentelemetry.io/otel v1.34.0
-	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.33.0
+	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.34.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.34.0
 	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.34.0
 	go.opentelemetry.io/otel/sdk v1.34.0
