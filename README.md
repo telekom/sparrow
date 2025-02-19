@@ -465,6 +465,8 @@ latency:
   - Labelled with `target`
 
 ### Check: DNS
+> [!CAUTION]
+> Versions > v0.5.0, the api returns lowecase keys instead of uppercase.
 
 Available configuration options:
 
@@ -629,6 +631,9 @@ Is roughly equal to this:
 ```
 
 ## API
+
+> [!CAUTION]
+> Versions > v0.5.0, the api returns lowecase keys instead of uppercase for DNS metric.
 
 The `sparrow` exposes an API for accessing the results of various checks. Each check registers its own endpoint
 at `/v1/metrics/{check-name}`. The API's definition is available at `/openapi`.
