@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2025 Deutsche Telekom IT GmbH
+
+SPDX-License-Identifier: CC-BY-4.0
+-->
+
 # Changelog
 
 ## [0.6.0](TODOADDRELEASE) (DATE)
