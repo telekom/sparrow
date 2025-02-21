@@ -60,9 +60,9 @@ func NewCheck() checks.Check {
 
 // result represents the result of a single DNS check for a specific target
 type result struct {
-	Resolved []string
-	Error    *string
-	Total    float64
+	Resolved []string `json:"resolved"`
+	Error    *string  `json:"error"`
+	Total    float64  `json:"total"`
 }
 
 // Run starts the dns check

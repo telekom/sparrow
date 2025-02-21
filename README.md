@@ -465,6 +465,8 @@ latency:
   - Labelled with `target`
 
 ### Check: DNS
+> [!CAUTION]
+> **Breaking Change:** Starting from version `v0.6.0`, the API returns lowercase keys instead of capitalized keys. Ensure that your code handles this change to avoid issues. 
 
 Available configuration options:
 
@@ -629,6 +631,9 @@ Is roughly equal to this:
 ```
 
 ## API
+
+> [!CAUTION]
+> **Breaking Change:** Starting from version `v0.6.0`, the API returns lowercase keys instead of capitalized keys. Ensure that your code handles this change to avoid issues.
 
 The `sparrow` exposes an API for accessing the results of various checks. Each check registers its own endpoint
 at `/v1/metrics/{check-name}`. The API's definition is available at `/openapi`.
