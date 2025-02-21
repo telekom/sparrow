@@ -6,12 +6,10 @@ SPDX-License-Identifier: CC-BY-4.0
 
 # Changelog
 
-## [0.6.0](TODOADDRELEASE) (DATE)
+## [v0.6.0](TODOADDRELEASE) (DATE)
+⚠️ This release contains potential breaking change ⚠️
 
-### Features
+The API returns lowercase keys instead of capitalized keys. Ensure that your code handles this change to avoid issues.
 
-* added Changelog file
-
-### Bug Fixes
-
-* **BREAKING CHANGE:** DNS metric returns lowercase keys instead of uppercase ones
+* [ENHANCEMENT] added Changelog file
+* [BUGFIX] DNS metric returns lowercase keys instead of capitalized keys
