@@ -11,7 +11,7 @@ require (
 	github.com/go-chi/chi/v5 v5.2.1
 	github.com/google/go-cmp v0.7.0
 	github.com/jarcoal/httpmock v1.3.1
-	github.com/prometheus/client_golang v1.21.0
+	github.com/prometheus/client_golang v1.21.1
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/viper v1.20.0-alpha.6
 	github.com/stretchr/testify v1.10.0
