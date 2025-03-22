@@ -9,9 +9,12 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/telekom/sparrow/test"
 )
 
 func TestGetNextLink(t *testing.T) {
+	test.MarkAsShort(t)
+
 	type header struct {
 		noLinkHeader bool
 		key          string

@@ -42,6 +42,6 @@ func (f *Framework) E2E(t *testing.T, cfg *config.Config) *E2E {
 		t:       t,
 		config:  *cfg,
 		sparrow: sparrow.New(cfg),
-		checks:  map[string]builder.Check{},
+		checks:  []builder.Check{},
 	}
 }

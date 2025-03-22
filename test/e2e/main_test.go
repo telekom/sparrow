@@ -95,7 +95,7 @@ func TestE2E_Sparrow_WithChecks_ConfigureOnce(t *testing.T) {
 			go func() {
 				finish <- e2e.Run(ctx)
 			}()
-			e2e.AwaitStartup("http://localhost:8080", checkTimeout).AwaitChecks()
+			e2e.AwaitAll("http://localhost:8080")
 
 			for url, status := range tt.wantEndpoints {
 				e2e.HttpAssertion(url).WithSchema().Assert(status)
@@ -351,7 +351,7 @@ func TestE2E_Sparrow_WithChecks_Reconfigure(t *testing.T) {
 			go func() {
 				finish <- e2e.Run(ctx)
 			}()
-			e2e.AwaitStartup("http://localhost:8080", checkTimeout).AwaitChecks()
+			e2e.AwaitAll("http://localhost:8080")
 
 			for url, result := range tt.wantInitial {
 				e2e.HttpAssertion(url).
@@ -495,7 +495,7 @@ func TestE2E_Sparrow_WithRemoteConfig(t *testing.T) {
 			go func() {
 				finish <- e2e.Run(ctx)
 			}()
-			e2e.AwaitStartup("http://localhost:8081", checkTimeout).AwaitChecks()
+			e2e.AwaitAll("http://localhost:8081")
 
 			for url, result := range tt.wantInitial {
 				e2e.HttpAssertion(url).

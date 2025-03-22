@@ -98,6 +98,8 @@ func TestRun_ContextCancellation(t *testing.T) {
 // when none, one or multiple checks are registered. The test checks that after shutdown no
 // checks are registered anymore (the checks slice is empty) and that the done channel is closed.
 func TestChecksController_Shutdown(t *testing.T) {
+	test.MarkAsShort(t)
+
 	tests := []struct {
 		name   string
 		checks []checks.Check
@@ -283,6 +285,8 @@ func TestChecksController_Reconcile(t *testing.T) {
 // TestChecksController_Reconcile_Update tests the update of the checks
 // when the runtime configuration changes.
 func TestChecksController_Reconcile_Update(t *testing.T) {
+	test.MarkAsShort(t)
+
 	ctx, cancel := logger.NewContextWithLogger(context.Background())
 	defer cancel()
 

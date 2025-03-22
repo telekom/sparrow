@@ -614,6 +614,8 @@ func TestClient_fetchDefaultBranch(t *testing.T) {
 }
 
 func Test_client_fetchNextFileList(t *testing.T) {
+	test.MarkAsShort(t)
+
 	type mockRespFile struct {
 		Name string `json:"name"`
 	}
