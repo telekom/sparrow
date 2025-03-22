@@ -22,7 +22,7 @@ var DefaultRetry = helper.RetryConfig{
 
 // Check implementations are expected to perform specific monitoring tasks and report results.
 //
-//go:generate moq -out base_moq.go . Check
+//go:generate go tool moq -out base_moq.go . Check
 type Check interface {
 	// Run is called once, to start running the check. The check should
 	// run until the context is canceled and handle problems itself.

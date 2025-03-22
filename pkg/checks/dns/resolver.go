@@ -9,7 +9,7 @@ import (
 	"net"
 )
 
-//go:generate moq -out resolver_moq.go . Resolver
+//go:generate go tool moq -out resolver_moq.go . Resolver
 type Resolver interface {
 	LookupAddr(ctx context.Context, addr string) ([]string, error)
 	LookupHost(ctx context.Context, addr string) ([]string, error)

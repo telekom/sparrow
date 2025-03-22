@@ -15,7 +15,7 @@ import (
 	"github.com/telekom/sparrow/internal/logger"
 )
 
-//go:generate moq -out api_moq.go . API
+//go:generate go tool moq -out api_moq.go . API
 type API interface {
 	Run(ctx context.Context) error
 	Shutdown(ctx context.Context) error
