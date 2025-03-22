@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2025 Deutsche Telekom IT GmbH
+#
+# SPDX-License-Identifier: Apache-2.0
+
 root=$(pwd)
 export SPARROW_BIN=$(realpath ./dist/sparrow_linux_amd64_v1/sparrow)
 

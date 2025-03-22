@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2025 Deutsche Telekom IT GmbH
+#
+# SPDX-License-Identifier: Apache-2.0
+
 name: Continuous Integration
 
 on: [push]
@@ -19,6 +23,9 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
+      
+      - name: Install syft for sbom generation
+        uses: anchore/sbom-action/download-syft@v0.18.0
 
       - name: Build snapshot artifacts
         uses: goreleaser/goreleaser-action@v6

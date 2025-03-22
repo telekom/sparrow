@@ -1,20 +1,6 @@
-// sparrow
-// (C) 2023, Deutsche Telekom IT GmbH
+// SPDX-FileCopyrightText: 2025 Deutsche Telekom IT GmbH
 //
-// Deutsche Telekom IT GmbH and all other contributors /
-// copyright owners license this file to you under the Apache
-// License, Version 2.0 (the "License"); you may not use this
-// file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing,
-// software distributed under the License is distributed on an
-// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied.  See the License for the
-// specific language governing permissions and limitations
-// under the License.
+// SPDX-License-Identifier: Apache-2.0
 
 package gitlab
 
@@ -59,6 +45,17 @@ type Config struct {
 	ProjectID int `yaml:"projectId" mapstructure:"projectId"`
 	// Branch is the branch to use for the gitlab repository
 	Branch string `yaml:"branch" mapstructure:"branch"`
+}
+
+// apiError wraps non-expected API errors & status codes
+// during the interaction with the gitlab API
+type apiError struct {
+	message string
+	code    int
+}
+
+func (e apiError) Error() string {
+	return fmt.Sprintf("gitlab API sent an unexpected status code (%d) with the following error message: %s", e.code, e.message)
 }
 
 // New creates a new gitlab client
@@ -130,7 +127,7 @@ func (c *client) fetchFile(ctx context.Context, f string) (checks.GlobalTarget, 
 
 	if resp.StatusCode != http.StatusOK {
 		log.ErrorContext(ctx, "Failed to fetch file", "status", resp.Status)
-		return res, fmt.Errorf("request failed, status is %s", resp.Status)
+		return res, toError(resp)
 	}
 
 	err = json.NewDecoder(resp.Body).Decode(&res)
@@ -196,7 +193,7 @@ func (c *client) fetchNextFileList(ctx context.Context, reqUrl string) ([]string
 
 	if resp.StatusCode != http.StatusOK {
 		log.ErrorContext(ctx, "Failed to fetch file list", "status", resp.Status)
-		return nil, fmt.Errorf("request failed, status is %s", resp.Status)
+		return nil, toError(resp)
 	}
 
 	var fl []file
@@ -262,14 +259,9 @@ func (c *client) PutFile(ctx context.Context, file remote.File) error { //nolint
 		err = errors.Join(err, resp.Body.Close())
 	}()
 
-	// Unfortunately the Gitlab API does not give any information about what went wrong and just returns a 400 Bad Request in case of
-	// an error while committing the file. A probable cause for this is that the branch does not exist or is protected.
-	// The documentation documents some more possible errors, but not all of them: https://docs.gitlab.com/ee/api/repository_files.html#update-existing-file-in-repository
-	// Therefore we just check for the status code and return an error if it is not 200 OK.
-	// This is not ideal, but the best we can do with the current API without implementing a full blown error handling mechanism.
 	if resp.StatusCode != http.StatusOK {
 		log.ErrorContext(ctx, "Failed to push registration file", "status", resp.Status)
-		return fmt.Errorf("request failed, status is %s", resp.Status)
+		return toError(resp)
 	}
 
 	return nil
@@ -311,14 +303,9 @@ func (c *client) PostFile(ctx context.Context, file remote.File) error { //nolin
 		err = errors.Join(err, resp.Body.Close())
 	}()
 
-	// Unfortunately the Gitlab API does not give any information about what went wrong and just returns a 400 Bad Request in case of
-	// an error while committing the file. A probable cause for this is that the branch does not exist or is protected.
-	// The documentation documents some more possible errors, but not all of them: https://docs.gitlab.com/ee/api/repository_files.html#update-existing-file-in-repository
-	// Therefore we just check for the status code and return an error if it is not 200 OK.
-	// This is not ideal, but the best we can do with the current API without implementing a full blown error handling mechanism.
 	if resp.StatusCode != http.StatusCreated {
 		log.ErrorContext(ctx, "Failed to post file", "status", resp.Status)
-		return fmt.Errorf("request failed, status is %s", resp.Status)
+		return toError(resp)
 	}
 
 	return nil
@@ -365,7 +352,7 @@ func (c *client) DeleteFile(ctx context.Context, file remote.File) error { //nol
 
 	if resp.StatusCode != http.StatusNoContent {
 		log.ErrorContext(ctx, "Failed to delete file", "status", resp.Status)
-		return fmt.Errorf("request failed, status is %s", resp.Status)
+		return toError(resp)
 	}
 
 	return nil
@@ -432,4 +419,17 @@ func (c *client) fetchDefaultBranch() string {
 
 	log.WarnContext(ctx, "No default branch found, using fallback", "fallback", fallbackBranch)
 	return fallbackBranch
+}
+
+// toError reads the error response from the gitlab API
+func toError(resp *http.Response) error {
+	buf := new(bytes.Buffer)
+	_, err := buf.ReadFrom(resp.Body)
+	if err != nil {
+		return fmt.Errorf("failed to read response body from API: %w", err)
+	}
+	return apiError{
+		message: buf.String(),
+		code:    resp.StatusCode,
+	}
 }
