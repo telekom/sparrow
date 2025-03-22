@@ -20,7 +20,7 @@ import (
 
 var _ Provider = (*manager)(nil)
 
-//go:generate moq -out metrics_moq.go . Provider
+//go:generate go tool moq -out metrics_moq.go . Provider
 type Provider interface {
 	// GetRegistry returns the prometheus registry instance
 	// containing the registered prometheus collectors

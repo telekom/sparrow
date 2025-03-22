@@ -10,7 +10,7 @@ import (
 	"github.com/telekom/sparrow/pkg/checks/runtime"
 )
 
-//go:generate moq -out loader_moq.go . Loader
+//go:generate go tool moq -out loader_moq.go . Loader
 type Loader interface {
 	// Run starts the loader routine.
 	// The loader should be able
