@@ -10,9 +10,13 @@ import (
 	"fmt"
 	"testing"
 	"time"
+
+	"github.com/telekom/sparrow/test"
 )
 
 func TestRetry(t *testing.T) {
+	test.MarkAsShort(t)
+
 	effectorFuncCallCounter := 0
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -113,6 +117,8 @@ func TestRetry(t *testing.T) {
 }
 
 func Test_getExpBackoff(t *testing.T) {
+	test.MarkAsShort(t)
+
 	type args struct {
 		initialDelay time.Duration
 		iteration    int

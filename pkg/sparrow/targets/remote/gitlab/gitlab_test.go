@@ -15,9 +15,12 @@ import (
 	"github.com/jarcoal/httpmock"
 	"github.com/telekom/sparrow/pkg/checks"
 	"github.com/telekom/sparrow/pkg/sparrow/targets/remote"
+	"github.com/telekom/sparrow/test"
 )
 
 func Test_gitlab_fetchFileList(t *testing.T) {
+	test.MarkAsShort(t)
+
 	type file struct {
 		Name string `json:"name"`
 	}
@@ -118,6 +121,8 @@ func Test_gitlab_fetchFileList(t *testing.T) {
 // The filelist and url are the same, so we HTTP responders can
 // be created without much hassle
 func Test_gitlab_FetchFiles(t *testing.T) {
+	test.MarkAsShort(t)
+
 	type file struct {
 		Name string `json:"name"`
 	}
@@ -217,6 +222,8 @@ func Test_gitlab_FetchFiles(t *testing.T) {
 }
 
 func Test_gitlab_fetchFiles_error_cases(t *testing.T) {
+	test.MarkAsShort(t)
+
 	type file struct {
 		Name string `json:"name"`
 	}
@@ -301,6 +308,8 @@ func Test_gitlab_fetchFiles_error_cases(t *testing.T) {
 }
 
 func TestClient_PutFile(t *testing.T) { //nolint:dupl // no need to refactor yet
+	test.MarkAsShort(t)
+
 	now := time.Now()
 	tests := []struct {
 		name     string
@@ -376,6 +385,8 @@ func TestClient_PutFile(t *testing.T) { //nolint:dupl // no need to refactor yet
 }
 
 func TestClient_PostFile(t *testing.T) { //nolint:dupl // no need to refactor yet
+	test.MarkAsShort(t)
+
 	now := time.Now()
 	tests := []struct {
 		name     string
@@ -451,6 +462,8 @@ func TestClient_PostFile(t *testing.T) { //nolint:dupl // no need to refactor ye
 }
 
 func TestClient_DeleteFile(t *testing.T) {
+	test.MarkAsShort(t)
+
 	tests := []struct {
 		name     string
 		fileName string
@@ -507,6 +520,8 @@ func TestClient_DeleteFile(t *testing.T) {
 }
 
 func TestClient_fetchDefaultBranch(t *testing.T) {
+	test.MarkAsShort(t)
+
 	tests := []struct {
 		name     string
 		code     int
@@ -599,6 +614,8 @@ func TestClient_fetchDefaultBranch(t *testing.T) {
 }
 
 func Test_client_fetchNextFileList(t *testing.T) {
+	test.MarkAsShort(t)
+
 	type mockRespFile struct {
 		Name string `json:"name"`
 	}

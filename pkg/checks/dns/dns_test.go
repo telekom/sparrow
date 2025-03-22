@@ -9,12 +9,12 @@ import (
 	"fmt"
 	"net"
 	"reflect"
-	"sync"
 	"testing"
 	"time"
 
 	"github.com/telekom/sparrow/pkg/checks"
 	"github.com/telekom/sparrow/pkg/checks/health"
+	"github.com/telekom/sparrow/test"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -27,20 +27,19 @@ const (
 )
 
 func TestDNS_Run(t *testing.T) {
+	test.MarkAsShort(t)
+
 	tests := []struct {
 		name      string
-		mockSetup func() *DNS
+		mockSetup func() *check
 		targets   []string
 		want      checks.Result
 	}{
 		{
 			name: "success with no targets",
-			mockSetup: func() *DNS {
-				return &DNS{
-					CheckBase: checks.CheckBase{
-						Mu:       sync.Mutex{},
-						DoneChan: make(chan struct{}, 1),
-					},
+			mockSetup: func() *check {
+				return &check{
+					Base: checks.NewBase(),
 				}
 			},
 			targets: []string{},
@@ -50,7 +49,7 @@ func TestDNS_Run(t *testing.T) {
 		},
 		{
 			name: "success with one target lookup",
-			mockSetup: func() *DNS {
+			mockSetup: func() *check {
 				c := newCommonDNS()
 				c.client = &ResolverMock{
 					LookupHostFunc: func(ctx context.Context, addr string) ([]string, error) {
@@ -69,7 +68,7 @@ func TestDNS_Run(t *testing.T) {
 		},
 		{ //nolint:dupl // normal lookup
 			name: "success with multiple target lookups",
-			mockSetup: func() *DNS {
+			mockSetup: func() *check {
 				c := newCommonDNS()
 				c.client = &ResolverMock{
 					LookupHostFunc: func(ctx context.Context, addr string) ([]string, error) {
@@ -89,7 +88,7 @@ func TestDNS_Run(t *testing.T) {
 		},
 		{ //nolint:dupl // reverse lookup
 			name: "success with multiple target reverse lookups",
-			mockSetup: func() *DNS {
+			mockSetup: func() *check {
 				c := newCommonDNS()
 				c.client = &ResolverMock{
 					LookupAddrFunc: func(ctx context.Context, addr string) ([]string, error) {
@@ -109,7 +108,7 @@ func TestDNS_Run(t *testing.T) {
 		},
 		{
 			name: "error - lookup failure for a target",
-			mockSetup: func() *DNS {
+			mockSetup: func() *check {
 				c := newCommonDNS()
 				c.client = &ResolverMock{
 					LookupHostFunc: func(ctx context.Context, addr string) ([]string, error) {
@@ -128,7 +127,7 @@ func TestDNS_Run(t *testing.T) {
 		},
 		{
 			name: "error - timeout scenario for a target",
-			mockSetup: func() *DNS {
+			mockSetup: func() *check {
 				c := newCommonDNS()
 				c.client = &ResolverMock{
 					LookupHostFunc: func(ctx context.Context, addr string) ([]string, error) {
@@ -198,8 +197,9 @@ func TestDNS_Run(t *testing.T) {
 }
 
 func TestDNS_Run_Context_Done(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
+	test.MarkAsShort(t)
 
+	ctx, cancel := context.WithCancel(context.Background())
 	c := NewCheck()
 	cResult := make(chan checks.ResultDTO, 1)
 	defer close(cResult)
@@ -227,22 +227,9 @@ func TestDNS_Run_Context_Done(t *testing.T) {
 	time.Sleep(time.Millisecond * 30)
 }
 
-func TestDNS_Shutdown(t *testing.T) {
-	cDone := make(chan struct{}, 1)
-	c := DNS{
-		CheckBase: checks.CheckBase{
-			DoneChan: cDone,
-		},
-	}
-	c.Shutdown()
-
-	_, ok := <-cDone
-	if !ok {
-		t.Error("Shutdown() should be ok")
-	}
-}
-
 func TestDNS_UpdateConfig(t *testing.T) {
+	test.MarkAsShort(t)
+
 	tests := []struct {
 		name    string
 		input   checks.Runtime
@@ -279,13 +266,13 @@ func TestDNS_UpdateConfig(t *testing.T) {
 					exampleURL,
 				},
 			},
-			want:    Config{},
+			want:    Config{Retry: checks.DefaultRetry},
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := &DNS{}
+			c := NewCheck().(*check)
 
 			if err := c.UpdateConfig(tt.input); (err != nil) != tt.wantErr {
 				t.Errorf("DNS.UpdateConfig() error = %v, wantErr %v", err, tt.wantErr)
@@ -296,6 +283,8 @@ func TestDNS_UpdateConfig(t *testing.T) {
 }
 
 func TestNewCheck(t *testing.T) {
+	test.MarkAsShort(t)
+
 	c := NewCheck()
 	if c == nil {
 		t.Error("NewLatencyCheck() should not be nil")
@@ -306,12 +295,9 @@ func stringPointer(s string) *string {
 	return &s
 }
 
-func newCommonDNS() *DNS {
-	return &DNS{
-		CheckBase: checks.CheckBase{
-			Mu:       sync.Mutex{},
-			DoneChan: make(chan struct{}, 1),
-		},
+func newCommonDNS() *check {
+	return &check{
+		Base:    checks.NewBase(),
 		metrics: newMetrics(),
 	}
 }

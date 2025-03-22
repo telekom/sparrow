@@ -15,16 +15,19 @@ import (
 	"testing"
 	"time"
 
+	"github.com/goccy/go-yaml"
 	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/require"
 	"github.com/telekom/sparrow/internal/helper"
 	"github.com/telekom/sparrow/internal/logger"
 	"github.com/telekom/sparrow/pkg/checks/health"
 	"github.com/telekom/sparrow/pkg/checks/runtime"
-	"gopkg.in/yaml.v3"
+	"github.com/telekom/sparrow/test"
 )
 
 func TestHttpLoader_GetRuntimeConfig(t *testing.T) {
+	test.MarkAsShort(t)
+
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
@@ -141,6 +144,8 @@ func TestHttpLoader_GetRuntimeConfig(t *testing.T) {
 // The test runs the Run method for a while
 // and then shuts it down via a goroutine
 func TestHttpLoader_Run(t *testing.T) {
+	test.MarkAsShort(t)
+
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
@@ -241,6 +246,8 @@ func TestHttpLoader_Run(t *testing.T) {
 }
 
 func TestHttpLoader_Shutdown(t *testing.T) {
+	test.MarkAsShort(t)
+
 	tests := []struct {
 		name string
 	}{
@@ -269,6 +276,8 @@ func TestHttpLoader_Shutdown(t *testing.T) {
 // TestHttpLoader_Run_config_sent_to_channel tests if the config is sent to the channel
 // when the Run method is called and the remote endpoint returns a valid response
 func TestHttpLoader_Run_config_sent_to_channel(t *testing.T) {
+	test.MarkAsShort(t)
+
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
@@ -331,6 +340,8 @@ func TestHttpLoader_Run_config_sent_to_channel(t *testing.T) {
 // when the Run method is called
 // and the remote endpoint returns a non-200 response
 func TestHttpLoader_Run_empty_config_sent_to_channel_500(t *testing.T) {
+	test.MarkAsShort(t)
+
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
@@ -382,6 +393,8 @@ func TestHttpLoader_Run_empty_config_sent_to_channel_500(t *testing.T) {
 // when the Run method is called
 // and the client can't execute the requests
 func TestHttpLoader_Run_empty_config_sent_to_channel_client_error(t *testing.T) {
+	test.MarkAsShort(t)
+
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
