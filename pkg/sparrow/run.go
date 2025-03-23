@@ -7,14 +7,12 @@ package sparrow
 import (
 	"context"
 	"fmt"
-	"net/url"
-	"slices"
-	"strings"
 	"sync"
 	"time"
 
 	"github.com/telekom/sparrow/internal/logger"
 	"github.com/telekom/sparrow/pkg/api"
+	"github.com/telekom/sparrow/pkg/checks"
 	"github.com/telekom/sparrow/pkg/checks/runtime"
 	"github.com/telekom/sparrow/pkg/config"
 	"github.com/telekom/sparrow/pkg/db"
@@ -126,36 +124,23 @@ func (s *Sparrow) Run(ctx context.Context) error {
 // enrichTargets updates the targets of the sparrow's checks with the
 // global targets. Per default, the two target lists are merged.
 func (s *Sparrow) enrichTargets(ctx context.Context, cfg runtime.Config) runtime.Config {
-	l := logger.FromContext(ctx)
 	if cfg.Empty() || s.tarMan == nil {
 		return cfg
 	}
-
-	for _, gt := range s.tarMan.GetTargets() {
-		u, err := url.Parse(gt.Url)
+	var gts []checks.GlobalTarget
+	for _, t := range s.tarMan.GetTargets() {
+		hostname, err := t.Hostname()
 		if err != nil {
-			l.Error("Failed to parse global target URL", "error", err, "url", gt.Url)
+			logger.FromContext(ctx).ErrorContext(ctx, "Failed to get hostname from target", "target", t, "error", err)
 			continue
 		}
-
-		// split off hostWithoutPort because it could contain a port
-		hostWithoutPort := strings.Split(u.Host, ":")[0]
-		if hostWithoutPort == s.config.SparrowName {
+		// We don't need to enrich the configs with the own hostname
+		if s.config.SparrowName == hostname {
 			continue
 		}
-
-		if cfg.HasHealthCheck() && !slices.Contains(cfg.Health.Targets, u.String()) {
-			cfg.Health.Targets = append(cfg.Health.Targets, u.String())
-		}
-		if cfg.HasLatencyCheck() && !slices.Contains(cfg.Latency.Targets, u.String()) {
-			cfg.Latency.Targets = append(cfg.Latency.Targets, u.String())
-		}
-		if cfg.HasDNSCheck() && !slices.Contains(cfg.Dns.Targets, hostWithoutPort) {
-			cfg.Dns.Targets = append(cfg.Dns.Targets, hostWithoutPort)
-		}
+		gts = append(gts, t)
 	}
-
-	return cfg
+	return cfg.Enrich(ctx, gts)
 }
 
 // shutdown shuts down the sparrow and all managed components gracefully.

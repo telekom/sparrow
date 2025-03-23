@@ -5,11 +5,14 @@
 package latency
 
 import (
+	"context"
 	"fmt"
 	"net/url"
+	"slices"
 	"time"
 
 	"github.com/telekom/sparrow/internal/helper"
+	"github.com/telekom/sparrow/internal/logger"
 	"github.com/telekom/sparrow/pkg/checks"
 )
 
@@ -53,4 +56,22 @@ func (c *Config) Validate() error {
 	}
 
 	return nil
+}
+
+// Enrich adds the global targets to the configuration
+func (c *Config) Enrich(ctx context.Context, targets []checks.GlobalTarget) {
+	log := logger.FromContext(ctx)
+	for _, t := range targets {
+		u, err := t.URL()
+		if err != nil {
+			log.ErrorContext(ctx, "Failed to get URL from target", "target", t, "error", err)
+			continue
+		}
+
+		target := u.String()
+		if !slices.Contains(c.Targets, target) {
+			log.DebugContext(ctx, "Adding target to health check", "target", target)
+			c.Targets = append(c.Targets, target)
+		}
+	}
 }

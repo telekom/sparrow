@@ -5,11 +5,14 @@
 package dns
 
 import (
+	"context"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 
 	"github.com/telekom/sparrow/internal/helper"
+	"github.com/telekom/sparrow/internal/logger"
 	"github.com/telekom/sparrow/pkg/checks"
 )
 
@@ -21,9 +24,9 @@ const (
 // Config defines the configuration parameters for a DNS check
 type Config struct {
 	Targets  []string           `json:"targets" yaml:"targets"`
+	Retry    helper.RetryConfig `json:"retry" yaml:"retry"`
 	Interval time.Duration      `json:"interval" yaml:"interval"`
 	Timeout  time.Duration      `json:"timeout" yaml:"timeout"`
-	Retry    helper.RetryConfig `json:"retry" yaml:"retry"`
 }
 
 // For returns the name of the check
@@ -48,4 +51,21 @@ func (c *Config) Validate() error {
 	}
 
 	return nil
+}
+
+// Enrich adds the global targets to the configuration
+func (c *Config) Enrich(ctx context.Context, targets []checks.GlobalTarget) {
+	log := logger.FromContext(ctx)
+	for _, t := range targets {
+		hostname, err := t.Hostname()
+		if err != nil {
+			log.ErrorContext(ctx, "Failed to get hostname from target", "target", t, "error", err)
+			continue
+		}
+
+		if !slices.Contains(c.Targets, hostname) {
+			log.DebugContext(ctx, "Adding target to DNS check", "target", hostname)
+			c.Targets = append(c.Targets, hostname)
+		}
+	}
 }
