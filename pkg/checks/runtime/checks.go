@@ -5,6 +5,7 @@
 package runtime
 
 import (
+	"iter"
 	"slices"
 	"sync"
 
@@ -14,7 +15,7 @@ import (
 // Checks holds all the checks.
 type Checks struct {
 	mu     sync.RWMutex
-	checks []checks.Check
+	checks []checks.Check // = *checks.Check
 }
 
 // Add adds a new check.
@@ -37,8 +38,8 @@ func (c *Checks) Delete(check checks.Check) {
 }
 
 // Iter returns configured checks in an iterable format
-func (c *Checks) Iter() []checks.Check {
+func (c *Checks) Iter() iter.Seq[checks.Check] {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
-	return slices.Clone(c.checks)
+	return slices.Values(slices.Clone(c.checks))
 }

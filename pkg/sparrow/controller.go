@@ -69,7 +69,7 @@ func (cc *ChecksController) Shutdown(ctx context.Context) {
 	log := logger.FromContext(ctx)
 	log.Info("Shutting down checks controller")
 
-	for _, c := range cc.checks.Iter() {
+	for c := range cc.checks.Iter() {
 		cc.UnregisterCheck(ctx, c)
 	}
 	cc.done <- struct{}{}
@@ -90,7 +90,7 @@ func (cc *ChecksController) Reconcile(ctx context.Context, cfg runtime.Config) {
 
 	// Update existing checks and create a list of checks to unregister
 	var unregList []checks.Check
-	for _, c := range cc.checks.Iter() {
+	for c := range cc.checks.Iter() {
 		conf := cfg.For(c.Name())
 		if conf == nil {
 			unregList = append(unregList, c)
@@ -182,7 +182,7 @@ var oapiBoilerplate = openapi3.T{
 func (cc *ChecksController) GenerateCheckSpecs(ctx context.Context) (openapi3.T, error) {
 	log := logger.FromContext(ctx)
 	doc := oapiBoilerplate
-	for _, c := range cc.checks.Iter() {
+	for c := range cc.checks.Iter() {
 		name := c.Name()
 		ref, err := c.Schema()
 		if err != nil {

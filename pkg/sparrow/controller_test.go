@@ -8,6 +8,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"iter"
+	"slices"
 	"testing"
 	"time"
 
@@ -52,7 +54,7 @@ func TestRun_CheckRunError(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	found := false
-	for _, c := range cc.checks.Iter() {
+	for c := range cc.checks.Iter() {
 		if c.Name() == mockCheck.Name() {
 			found = true
 			break
@@ -130,9 +132,7 @@ func TestChecksController_Shutdown(t *testing.T) {
 
 			select {
 			case <-cc.done:
-				if len(cc.checks.Iter()) != 0 {
-					t.Errorf("Expected no checks to be registered")
-				}
+				assert.Len(t, slices.Collect(cc.checks.Iter()), 0)
 				return
 			case <-time.After(time.Second):
 				t.Fatal("Expected done channel to be closed")
@@ -253,7 +253,7 @@ func TestChecksController_Reconcile(t *testing.T) {
 			cc.Reconcile(ctx, tt.newRuntimeConfig)
 
 			// iterate of the controller's checks and check if they are configured
-			for _, c := range cc.checks.Iter() {
+			for c := range cc.checks.Iter() {
 				cfg := c.GetConfig()
 				assert.NotNil(t, cfg)
 				if cfg.For() == health.CheckName {
@@ -268,7 +268,7 @@ func TestChecksController_Reconcile(t *testing.T) {
 			}
 
 			// check that the number of registered checks is correct
-			assert.Equal(t, len(tt.newRuntimeConfig.Iter()), len(cc.checks.Iter()))
+			assert.Equal(t, len(slices.Collect(tt.newRuntimeConfig.Iter())), len(slices.Collect(cc.checks.Iter())))
 		})
 	}
 }
@@ -327,7 +327,7 @@ func TestChecksController_Reconcile_Update(t *testing.T) {
 
 			cc.Reconcile(ctx, tt.newRuntimeConfig)
 
-			for _, c := range cc.checks.Iter() {
+			for c := range cc.checks.Iter() {
 				switch c.GetConfig().For() {
 				case health.CheckName:
 					hc := c.(*health.Health)
@@ -360,8 +360,10 @@ func TestChecksController_RegisterCheck(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			cc := tt.setup()
 			cc.RegisterCheck(context.Background(), tt.check)
-			if cc.checks.Iter()[0] != tt.check {
-				t.Errorf("Expected one check to be registered")
+			next, stop := iter.Pull(cc.checks.Iter())
+			defer stop()
+			if check, ok := next(); !ok || check.Name() != tt.check.Name() {
+				t.Errorf("Expected check to be registered")
 			}
 		})
 	}
@@ -384,7 +386,7 @@ func TestChecksController_UnregisterCheck(t *testing.T) {
 
 			cc.UnregisterCheck(context.Background(), tt.check)
 
-			if len(cc.checks.Iter()) != 0 {
+			if len(slices.Collect(cc.checks.Iter())) != 0 {
 				t.Errorf("Expected check to be unregistered")
 			}
 		})
