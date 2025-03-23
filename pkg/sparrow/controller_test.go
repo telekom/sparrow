@@ -341,6 +341,50 @@ func TestChecksController_Reconcile_Update(t *testing.T) {
 	}
 }
 
+// BenchmarkReconcile benchmarks the performance of the Reconcile function.
+func BenchmarkReconcile(b *testing.B) {
+	ctx, cancel := logger.NewContextWithLogger(context.Background())
+	defer cancel()
+
+	cfg := runtime.Config{
+		Health: &health.Config{
+			Targets:  []string{"https://telekom.com"},
+			Interval: 1 * time.Second,
+			Timeout:  1 * time.Second,
+		},
+		Latency: &latency.Config{
+			Targets:  []string{"https://telekom.com"},
+			Interval: 1 * time.Second,
+			Timeout:  1 * time.Second,
+		},
+		Dns: &dns.Config{
+			Targets:  []string{"telekom.com"},
+			Interval: 1 * time.Second,
+			Timeout:  1 * time.Second,
+		},
+	}
+
+	cc := NewChecksController(db.NewInMemory(), metrics.New(metrics.Config{}))
+
+	const preRegCount = 25
+	var preReg []checks.Check
+	for i := range preRegCount {
+		preReg = append(preReg, newMockCheck(b, fmt.Sprintf("mockCheck%d", i)))
+	}
+	for _, c := range preReg {
+		cc.RegisterCheck(ctx, c)
+	}
+
+	for b.Loop() {
+		cc.Reconcile(ctx, cfg)
+		// This is not ideal, but we need to wait for the checks to be registered
+		// and run before we can run the next iteration.
+		// TODO: remove the wait after the race condition fixes in
+		// https://github.com/telekom/sparrow/pull/222 are merged
+		<-time.After(1 * time.Second)
+	}
+}
+
 func TestChecksController_RegisterCheck(t *testing.T) {
 	tests := []struct {
 		name  string
@@ -488,8 +532,14 @@ func TestGenerateCheckSpecs(t *testing.T) {
 	}
 }
 
+type test interface {
+	assert.TestingT
+	Helper()
+	Logf(format string, args ...any)
+}
+
 // newMockCheck creates a new mock check with the given name.
-func newMockCheck(t *testing.T, name string) *checks.CheckMock {
+func newMockCheck(t test, name string) *checks.CheckMock {
 	t.Helper()
 	return &checks.CheckMock{
 		GetMetricCollectorsFunc: func() []prometheus.Collector {

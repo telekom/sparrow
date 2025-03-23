@@ -15,7 +15,7 @@ import (
 // Checks holds all the checks.
 type Checks struct {
 	mu     sync.RWMutex
-	checks []checks.Check // = *checks.Check
+	checks []checks.Check
 }
 
 // Add adds a new check.
