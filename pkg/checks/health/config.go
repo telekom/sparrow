@@ -64,7 +64,7 @@ func (c *Config) Enrich(ctx context.Context, targets []checks.GlobalTarget) {
 	for _, t := range targets {
 		u, err := t.URL()
 		if err != nil {
-			log.ErrorContext(ctx, "Failed to get URL from target", "target", t, "error", err)
+			log.ErrorContext(ctx, "Failed to get URL from target", "target", t.String(), "error", err)
 			continue
 		}
 

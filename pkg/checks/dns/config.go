@@ -59,7 +59,7 @@ func (c *Config) Enrich(ctx context.Context, targets []checks.GlobalTarget) {
 	for _, t := range targets {
 		hostname, err := t.Hostname()
 		if err != nil {
-			log.ErrorContext(ctx, "Failed to get hostname from target", "target", t, "error", err)
+			log.ErrorContext(ctx, "Failed to get hostname from target", "target", t.String(), "error", err)
 			continue
 		}
 
