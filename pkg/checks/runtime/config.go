@@ -6,6 +6,7 @@ package runtime
 
 import (
 	"errors"
+	"iter"
 
 	"github.com/telekom/sparrow/pkg/checks"
 	"github.com/telekom/sparrow/pkg/checks/dns"
@@ -30,7 +31,7 @@ func (c Config) Empty() bool {
 }
 
 func (c Config) Validate() (err error) {
-	for _, cfg := range c.Iter() {
+	for cfg := range c.Iter() {
 		if vErr := cfg.Validate(); vErr != nil {
 			err = errors.Join(err, vErr)
 		}
@@ -39,22 +40,30 @@ func (c Config) Validate() (err error) {
 	return err
 }
 
-// Iter returns configured checks in an iterable format
-func (c Config) Iter() []checks.Runtime {
-	var configs []checks.Runtime
-	if c.Health != nil {
-		configs = append(configs, c.Health)
+// Iter returns configured checks as an iterator
+func (c Config) Iter() iter.Seq[checks.Runtime] {
+	return func(yield func(checks.Runtime) bool) {
+		if c.Health != nil {
+			if !yield(c.Health) {
+				return
+			}
+		}
+		if c.Latency != nil {
+			if !yield(c.Latency) {
+				return
+			}
+		}
+		if c.Dns != nil {
+			if !yield(c.Dns) {
+				return
+			}
+		}
+		if c.Traceroute != nil {
+			if !yield(c.Traceroute) {
+				return
+			}
+		}
 	}
-	if c.Latency != nil {
-		configs = append(configs, c.Latency)
-	}
-	if c.Dns != nil {
-		configs = append(configs, c.Dns)
-	}
-	if c.Traceroute != nil {
-		configs = append(configs, c.Traceroute)
-	}
-	return configs
 }
 
 // size returns the number of checks configured
