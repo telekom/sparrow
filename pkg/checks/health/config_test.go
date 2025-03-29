@@ -7,9 +7,13 @@ package health
 import (
 	"testing"
 	"time"
+
+	"github.com/telekom/sparrow/test"
 )
 
 func TestConfig_Validate(t *testing.T) {
+	test.MarkAsShort(t)
+
 	tests := []struct {
 		name    string
 		config  Config

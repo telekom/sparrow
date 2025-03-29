@@ -17,13 +17,16 @@ import (
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/go-chi/chi/v5"
+	"github.com/goccy/go-yaml"
 	"github.com/telekom/sparrow/pkg/checks"
 	"github.com/telekom/sparrow/pkg/checks/runtime"
 	"github.com/telekom/sparrow/pkg/db"
-	"gopkg.in/yaml.v3"
+	"github.com/telekom/sparrow/test"
 )
 
 func TestSparrow_handleOpenAPI(t *testing.T) {
+	test.MarkAsShort(t)
+
 	s := Sparrow{
 		controller: &ChecksController{
 			checks: runtime.Checks{},
@@ -77,6 +80,8 @@ func TestSparrow_handleOpenAPI(t *testing.T) {
 }
 
 func TestSparrow_handleCheckMetrics(t *testing.T) {
+	test.MarkAsShort(t)
+
 	tests := []struct {
 		name     string
 		want     []byte
@@ -113,12 +118,18 @@ func TestSparrow_handleCheckMetrics(t *testing.T) {
 			if tt.wantCode == http.StatusBadRequest {
 				r = chiRequest(httptest.NewRequest(http.MethodGet, "/v1/metrics/", bytes.NewBuffer([]byte{})), "")
 			}
+			r.Header.Add("Accept", "application/json")
 
 			s.handleCheckMetrics(w, r)
 			resp := w.Result()
+			defer resp.Body.Close()
 			body, _ := io.ReadAll(resp.Body)
 
 			if tt.wantCode == http.StatusOK {
+				if w.Header().Get("Content-Type") != "application/json" {
+					t.Errorf("Sparrow.getCheckMetrics() = %v, want %v", w.Header().Get("Content-Type"), "application/json")
+				}
+
 				if tt.wantCode != resp.StatusCode {
 					t.Errorf("Sparrow.getCheckMetrics() = %v, want %v", resp.StatusCode, tt.wantCode)
 				}
@@ -136,13 +147,14 @@ func TestSparrow_handleCheckMetrics(t *testing.T) {
 				if reflect.DeepEqual(got, want) {
 					t.Errorf("Sparrow.getCheckMetrics() = %v, want %v", got, want)
 				}
-			} else {
-				if tt.wantCode != resp.StatusCode {
-					t.Errorf("Sparrow.getCheckMetrics() = %v, want %v", resp.StatusCode, tt.wantCode)
-				}
-				if !reflect.DeepEqual(body, tt.want) {
-					t.Errorf("Sparrow.getCheckMetrics() = %v, want %v", body, tt.want)
-				}
+				return
+			}
+
+			if tt.wantCode != resp.StatusCode {
+				t.Errorf("Sparrow.getCheckMetrics() = %v, want %v", resp.StatusCode, tt.wantCode)
+			}
+			if !reflect.DeepEqual(body, tt.want) {
+				t.Errorf("Sparrow.getCheckMetrics() = %v, want %v", body, tt.want)
 			}
 		})
 	}

@@ -12,15 +12,17 @@ import (
 	"testing"
 	"time"
 
+	"github.com/goccy/go-yaml"
 	"github.com/telekom/sparrow/pkg/checks/health"
 	"github.com/telekom/sparrow/pkg/checks/runtime"
 	"github.com/telekom/sparrow/pkg/config/test"
-	"gopkg.in/yaml.v3"
+	testUtils "github.com/telekom/sparrow/test"
 )
 
 func TestNewFileLoader(t *testing.T) {
-	l := NewFileLoader(&Config{Loader: LoaderConfig{File: FileLoaderConfig{Path: "config.yaml"}}}, make(chan runtime.Config, 1))
+	testUtils.MarkAsShort(t)
 
+	l := NewFileLoader(&Config{Loader: LoaderConfig{File: FileLoaderConfig{Path: "config.yaml"}}}, make(chan runtime.Config, 1))
 	if l.config.File.Path != "config.yaml" {
 		t.Errorf("Expected path to be config.yaml, got %s", l.config.File.Path)
 	}
@@ -33,6 +35,8 @@ func TestNewFileLoader(t *testing.T) {
 }
 
 func TestFileLoader_Run(t *testing.T) {
+	testUtils.MarkAsShort(t)
+
 	tests := []struct {
 		name    string
 		config  LoaderConfig
@@ -105,6 +109,8 @@ func TestFileLoader_Run(t *testing.T) {
 }
 
 func TestFileLoader_getRuntimeConfig(t *testing.T) {
+	testUtils.MarkAsShort(t)
+
 	tests := []struct {
 		name    string
 		config  LoaderConfig

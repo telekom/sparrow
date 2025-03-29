@@ -12,12 +12,15 @@ import (
 
 	"github.com/telekom/sparrow/pkg/checks"
 	"github.com/telekom/sparrow/pkg/checks/latency"
+	"github.com/telekom/sparrow/test"
 
 	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestHealth_UpdateConfig(t *testing.T) {
+	test.MarkAsShort(t)
+
 	tests := []struct {
 		name           string
 		inputConfig    checks.Runtime
@@ -49,15 +52,13 @@ func TestHealth_UpdateConfig(t *testing.T) {
 			inputConfig: &latency.Config{
 				Targets: []string{"test"},
 			},
-			expectedConfig: Config{},
+			expectedConfig: Config{Retry: checks.DefaultRetry},
 			wantErr:        true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			h := &Health{
-				metrics: newMetrics(),
-			}
+			h := NewCheck().(*check)
 
 			if err := h.UpdateConfig(tt.inputConfig); (err != nil) != tt.wantErr {
 				t.Errorf("Health.UpdateConfig() error = %v, wantErr %v", err, tt.wantErr)
@@ -68,6 +69,8 @@ func TestHealth_UpdateConfig(t *testing.T) {
 }
 
 func Test_getHealth(t *testing.T) {
+	test.MarkAsShort(t)
+
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	endpoint := "https://api.test.com/test"
@@ -136,6 +139,8 @@ func Test_getHealth(t *testing.T) {
 }
 
 func TestHealth_Check(t *testing.T) {
+	test.MarkAsShort(t)
+
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
@@ -213,7 +218,7 @@ func TestHealth_Check(t *testing.T) {
 				)
 			}
 
-			h := &Health{
+			h := &check{
 				config: Config{
 					Targets: tt.targets,
 					Timeout: 30,
@@ -232,34 +237,4 @@ func TestHealth_Check(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestHealth_Shutdown(t *testing.T) {
-	cDone := make(chan struct{}, 1)
-	c := Health{
-		CheckBase: checks.CheckBase{
-			DoneChan: cDone,
-		},
-	}
-	c.Shutdown()
-
-	if _, ok := <-cDone; !ok {
-		t.Error("Channel should be done")
-	}
-
-	assert.Panics(t, func() {
-		cDone <- struct{}{}
-	}, "Channel is closed, should panic")
-
-	hc := NewCheck()
-	hc.Shutdown()
-
-	_, ok := <-hc.(*Health).DoneChan
-	if !ok {
-		t.Error("Channel should be done")
-	}
-
-	assert.Panics(t, func() {
-		hc.(*Health).DoneChan <- struct{}{}
-	}, "Channel is closed, should panic")
 }

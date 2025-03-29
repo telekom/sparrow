@@ -13,6 +13,7 @@ import (
 	"github.com/telekom/sparrow/pkg/checks/health"
 	"github.com/telekom/sparrow/pkg/checks/latency"
 	"github.com/telekom/sparrow/pkg/checks/runtime"
+	"github.com/telekom/sparrow/test"
 )
 
 var (
@@ -29,6 +30,8 @@ var (
 )
 
 func TestNewChecksFromConfig(t *testing.T) {
+	test.MarkAsShort(t)
+
 	tests := []struct {
 		name    string
 		cfg     runtime.Config
@@ -107,6 +110,8 @@ func newLatencyCheck() checks.Check {
 }
 
 func TestNewCheck(t *testing.T) {
+	test.MarkAsShort(t)
+
 	tests := []struct {
 		name    string
 		cfg     checks.Runtime

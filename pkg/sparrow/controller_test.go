@@ -22,9 +22,12 @@ import (
 	"github.com/telekom/sparrow/pkg/checks/runtime"
 	"github.com/telekom/sparrow/pkg/db"
 	"github.com/telekom/sparrow/pkg/sparrow/metrics"
+	"github.com/telekom/sparrow/test"
 )
 
 func TestRun_CheckRunError(t *testing.T) {
+	test.MarkAsShort(t)
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -66,8 +69,10 @@ func TestRun_CheckRunError(t *testing.T) {
 }
 
 func TestRun_ContextCancellation(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
+	test.MarkAsShort(t)
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	cc := NewChecksController(db.NewInMemory(), metrics.New(metrics.Config{}))
 
 	done := make(chan struct{})
@@ -93,6 +98,8 @@ func TestRun_ContextCancellation(t *testing.T) {
 // when none, one or multiple checks are registered. The test checks that after shutdown no
 // checks are registered anymore (the checks slice is empty) and that the done channel is closed.
 func TestChecksController_Shutdown(t *testing.T) {
+	test.MarkAsShort(t)
+
 	tests := []struct {
 		name   string
 		checks []checks.Check
@@ -142,6 +149,8 @@ func TestChecksController_Shutdown(t *testing.T) {
 }
 
 func TestChecksController_Reconcile(t *testing.T) {
+	test.MarkAsShort(t)
+
 	ctx, cancel := logger.NewContextWithLogger(context.Background())
 	defer cancel()
 	rtcfg := &runtime.Config{}
@@ -276,6 +285,8 @@ func TestChecksController_Reconcile(t *testing.T) {
 // TestChecksController_Reconcile_Update tests the update of the checks
 // when the runtime configuration changes.
 func TestChecksController_Reconcile_Update(t *testing.T) {
+	test.MarkAsShort(t)
+
 	ctx, cancel := logger.NewContextWithLogger(context.Background())
 	defer cancel()
 
@@ -330,11 +341,9 @@ func TestChecksController_Reconcile_Update(t *testing.T) {
 			for _, c := range cc.checks.Iter() {
 				switch c.GetConfig().For() {
 				case health.CheckName:
-					hc := c.(*health.Health)
-					assert.Equal(t, tt.newRuntimeConfig.Health.Targets, hc.GetConfig().(*health.Config).Targets)
+					assert.Equal(t, tt.newRuntimeConfig.Health.Targets, c.GetConfig().(*health.Config).Targets)
 				case latency.CheckName:
-					lc := c.(*latency.Latency)
-					assert.Equal(t, tt.newRuntimeConfig.Latency.Targets, lc.GetConfig().(*latency.Config).Targets)
+					assert.Equal(t, tt.newRuntimeConfig.Latency.Targets, c.GetConfig().(*latency.Config).Targets)
 				}
 			}
 		})
@@ -342,6 +351,8 @@ func TestChecksController_Reconcile_Update(t *testing.T) {
 }
 
 func TestChecksController_RegisterCheck(t *testing.T) {
+	test.MarkAsShort(t)
+
 	tests := []struct {
 		name  string
 		setup func() *ChecksController
@@ -368,6 +379,8 @@ func TestChecksController_RegisterCheck(t *testing.T) {
 }
 
 func TestChecksController_UnregisterCheck(t *testing.T) {
+	test.MarkAsShort(t)
+
 	tests := []struct {
 		name  string
 		check checks.Check
@@ -392,6 +405,8 @@ func TestChecksController_UnregisterCheck(t *testing.T) {
 }
 
 func TestGenerateCheckSpecs(t *testing.T) {
+	test.MarkAsShort(t)
+
 	tests := []struct {
 		name     string
 		checks   []checks.Check

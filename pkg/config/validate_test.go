@@ -11,11 +11,13 @@ import (
 
 	"github.com/telekom/sparrow/internal/helper"
 	"github.com/telekom/sparrow/pkg/api"
+	"github.com/telekom/sparrow/test"
 )
 
 func TestConfig_Validate(t *testing.T) {
-	ctx := context.Background()
+	test.MarkAsShort(t)
 
+	ctx := context.Background()
 	tests := []struct {
 		name    string
 		config  Config
@@ -156,6 +158,8 @@ func TestConfig_Validate(t *testing.T) {
 }
 
 func Test_isDNSName(t *testing.T) {
+	test.MarkAsShort(t)
+
 	tests := []struct {
 		name    string
 		dnsName string
