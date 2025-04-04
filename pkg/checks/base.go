@@ -6,6 +6,8 @@ package checks
 
 import (
 	"context"
+	"net/url"
+	"strconv"
 	"sync"
 	"time"
 
@@ -56,12 +58,15 @@ type CheckBase struct {
 	DoneChan chan struct{}
 }
 
-// Runtime is the interface that all check configurations must implement
+// Runtime is the interface that all check configurations must implement.
 type Runtime interface {
-	// For returns the name of the check being configured
+	// For returns the name of the check being configured.
 	For() string
-	// Validate checks if the configuration is valid
+	// Validate checks if the configuration is valid.
 	Validate() error
+	// Enrich enriches the configuration with the [GlobalTarget]s.
+	// Each configuration is responsible for adding the targets it needs.
+	Enrich(ctx context.Context, targets []GlobalTarget)
 }
 
 // Result encapsulates the outcome of a check run.
@@ -83,4 +88,51 @@ type ResultDTO struct {
 type GlobalTarget struct {
 	Url      string    `json:"url"`
 	LastSeen time.Time `json:"lastSeen"`
+}
+
+// URL returns the [url.URL] representation of the target.
+func (g GlobalTarget) URL() (*url.URL, error) {
+	return url.Parse(g.Url)
+}
+
+// Hostname returns the host of the target URL, stripping the port if present.
+func (g GlobalTarget) Hostname() (string, error) {
+	u, err := g.URL()
+	if err != nil {
+		return "", err
+	}
+	return u.Hostname(), nil
+}
+
+// Default ports
+const (
+	httpPort  = 80
+	httpsPort = 443
+)
+
+// Port returns the port of the target URL.
+func (g GlobalTarget) Port() (int, error) {
+	u, err := g.URL()
+	if err != nil {
+		return 0, err
+	}
+
+	// If the port is not specified, the default port for the scheme is returned.
+	if u.Port() == "" {
+		switch u.Scheme {
+		case "http":
+			return httpPort, nil
+		case "https":
+			return httpsPort, nil
+		default:
+			return 0, nil
+		}
+	}
+
+	return strconv.Atoi(u.Port())
+}
+
+// String returns the URL of the target.
+func (g GlobalTarget) String() string {
+	return g.Url
 }
