@@ -532,14 +532,8 @@ func TestGenerateCheckSpecs(t *testing.T) {
 	}
 }
 
-type test interface {
-	assert.TestingT
-	Helper()
-	Logf(format string, args ...any)
-}
-
 // newMockCheck creates a new mock check with the given name.
-func newMockCheck(t test, name string) *checks.CheckMock {
+func newMockCheck(t testing.TB, name string) *checks.CheckMock {
 	t.Helper()
 	return &checks.CheckMock{
 		GetMetricCollectorsFunc: func() []prometheus.Collector {
