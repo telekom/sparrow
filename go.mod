@@ -9,7 +9,7 @@ go 1.24
 tool github.com/matryer/moq
 
 require (
-	github.com/getkin/kin-openapi v0.131.0
+	github.com/getkin/kin-openapi v0.132.0
 	github.com/go-chi/chi/v5 v5.2.1
 	github.com/google/go-cmp v0.7.0
 	github.com/jarcoal/httpmock v1.4.0
