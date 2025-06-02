@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-FROM alpine:3.21 as prep
+FROM alpine:3.22 as prep
 
 RUN apk add --no-cache ca-certificates
 RUN adduser \
