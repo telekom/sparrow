@@ -22,7 +22,7 @@ func getNextLink(header http.Header) string {
 		return ""
 	}
 
-	for _, link := range strings.Split(link, ",") {
+	for link := range strings.SplitSeq(link, ",") {
 		linkParts := strings.Split(link, ";")
 		if len(linkParts) != 2 {
 			continue
