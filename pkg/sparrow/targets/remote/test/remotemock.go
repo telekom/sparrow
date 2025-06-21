@@ -95,7 +95,7 @@ func (m *MockClient) PostFileCount() int {
 }
 
 // New creates a new MockClient to mock the remote.Interactor
-func New(targets []checks.GlobalTarget) *MockClient {
+func New(targets ...checks.GlobalTarget) *MockClient {
 	return &MockClient{
 		targets: targets,
 	}

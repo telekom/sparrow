@@ -14,7 +14,7 @@ import (
 
 func TestRetry(t *testing.T) {
 	effectorFuncCallCounter := 0
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(t.Context())
 
 	type args struct {
 		effector Effector
@@ -39,7 +39,7 @@ func TestRetry(t *testing.T) {
 					Delay: time.Second,
 				},
 			},
-			ctx:         context.Background(),
+			ctx:         t.Context(),
 			wantError:   false,
 			wantRetries: 0,
 		},
@@ -58,7 +58,7 @@ func TestRetry(t *testing.T) {
 					Delay: time.Second,
 				},
 			},
-			ctx:         context.Background(),
+			ctx:         t.Context(),
 			wantError:   false,
 			wantRetries: 1,
 		},
@@ -74,7 +74,7 @@ func TestRetry(t *testing.T) {
 					Delay: time.Second,
 				},
 			},
-			ctx:         context.Background(),
+			ctx:         t.Context(),
 			wantError:   true,
 			wantRetries: 2,
 		},

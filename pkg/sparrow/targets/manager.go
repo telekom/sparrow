@@ -8,6 +8,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
 	"sync"
 	"time"
 
@@ -179,16 +180,22 @@ func (t *manager) register(ctx context.Context) error {
 		return nil
 	}
 
+	st, err := t.selfTarget()
+	if err != nil {
+		log.ErrorContext(ctx, "Failed to get self target URL", "error", err)
+		return err
+	}
+
 	f := remote.File{
 		AuthorEmail:   fmt.Sprintf("%s@sparrow", t.name),
 		AuthorName:    t.name,
 		CommitMessage: "Initial registration",
-		Content:       checks.GlobalTarget{Url: fmt.Sprintf("%s://%s", t.cfg.Scheme, t.name), LastSeen: time.Now().UTC()},
+		Content:       st,
 	}
 	f.SetFileName(fmt.Sprintf("%s.json", t.name))
 
 	log.DebugContext(ctx, "Registering as global target")
-	err := t.interactor.PostFile(ctx, f)
+	err = t.interactor.PostFile(ctx, f)
 	if err != nil {
 		log.ErrorContext(ctx, "Failed to register global gitlabTargetManager", "error", err)
 		return err
@@ -211,16 +218,22 @@ func (t *manager) update(ctx context.Context) error {
 		return nil
 	}
 
+	st, err := t.selfTarget()
+	if err != nil {
+		log.ErrorContext(ctx, "Failed to get self target URL", "error", err)
+		return err
+	}
+
 	f := remote.File{
 		AuthorEmail:   fmt.Sprintf("%s@sparrow", t.name),
 		AuthorName:    t.name,
 		CommitMessage: "Updated registration",
-		Content:       checks.GlobalTarget{Url: fmt.Sprintf("%s://%s", t.cfg.Scheme, t.name), LastSeen: time.Now().UTC()},
+		Content:       st,
 	}
 	f.SetFileName(fmt.Sprintf("%s.json", t.name))
 
 	log.DebugContext(ctx, "Updating instance registration")
-	err := t.interactor.PutFile(ctx, f)
+	err = t.interactor.PutFile(ctx, f)
 	if err != nil {
 		log.ErrorContext(ctx, "Failed to update registration", "error", err)
 		return err
@@ -229,40 +242,69 @@ func (t *manager) update(ctx context.Context) error {
 	return nil
 }
 
-// refreshTargets updates the targets with the latest available healthy targets
+func (t *manager) selfTarget() (checks.GlobalTarget, error) {
+	if t.cfg.Scheme == "" {
+		return checks.GlobalTarget{}, fmt.Errorf("scheme is not set")
+	}
+
+	u, err := url.Parse(fmt.Sprintf("%s://%s", t.cfg.Scheme, t.name))
+	if err != nil {
+		return checks.GlobalTarget{}, fmt.Errorf("failed to parse self target URL: %w", err)
+	}
+	return checks.GlobalTarget{
+		URL:      u,
+		LastSeen: time.Now().UTC(),
+	}, nil
+}
+
+// refreshTargets updates the manager's targets to include only healthy ones
 func (t *manager) refreshTargets(ctx context.Context) error {
 	log := logger.FromContext(ctx)
-	t.mu.Lock()
-	defer t.mu.Unlock()
-	var healthyTargets []checks.GlobalTarget
+
+	// Fetch targets first to minimize time holding the lock
 	targets, err := t.interactor.FetchFiles(ctx)
 	if err != nil {
 		log.ErrorContext(ctx, "Failed to update global targets", "error", err)
 		return err
 	}
 
-	// filter unhealthy targets - this may be removed in the future
-	for _, target := range targets {
-		if !t.registered && target.Url == fmt.Sprintf("%s://%s", t.cfg.Scheme, t.name) {
-			log.DebugContext(ctx, "Found self as global target", "lastSeenMinsAgo", time.Since(target.LastSeen).Minutes())
+	// Prepare for filtering
+	now := time.Now()
+	st, err := t.selfTarget()
+	if err != nil {
+		log.ErrorContext(ctx, "Failed to get self target URL", "error", err)
+		return err
+	}
+	selfURL := st.URL.String()
+
+	var healthy []checks.GlobalTarget
+
+	// Lock when updating shared state
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	for _, tgt := range targets {
+		// Check if this instance has registered itself
+		tgtURL := fmt.Sprintf("%s://%s", tgt.URL.Scheme, tgt.URL.Hostname())
+		if !t.registered && tgtURL == selfURL {
+			log.DebugContext(ctx, "Found self as global target", "lastSeenMinsAgo", now.Sub(tgt.LastSeen).Minutes())
 			t.registered = true
 			t.metrics.registered.Set(1)
 		}
 
-		if t.cfg.UnhealthyThreshold == 0 {
-			healthyTargets = append(healthyTargets, target)
+		// Skip unhealthy if threshold is set
+		if t.cfg.UnhealthyThreshold > 0 && now.Sub(tgt.LastSeen) > t.cfg.UnhealthyThreshold {
+			log.DebugContext(ctx, "Skipping unhealthy target", "target", tgt)
 			continue
 		}
 
-		if time.Now().Add(-t.cfg.UnhealthyThreshold).After(target.LastSeen) {
-			log.DebugContext(ctx, "Skipping unhealthy target", "target", target)
-			continue
-		}
-		healthyTargets = append(healthyTargets, target)
+		healthy = append(healthy, tgt)
 	}
 
-	t.targets = healthyTargets
-	log.DebugContext(ctx, "Updated global targets", "targets", len(t.targets))
+	// Update manager's targets and log the result
+	t.targets = healthy
+	log.DebugContext(ctx, "Updated global targets", "count", len(healthy))
+
 	return nil
 }
 

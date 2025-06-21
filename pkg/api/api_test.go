@@ -13,6 +13,8 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAPI_Run(t *testing.T) {
@@ -23,7 +25,6 @@ func TestAPI_Run(t *testing.T) {
 			path   string
 			status int
 		}
-		wantErr bool
 	}{
 		{
 			name: "Root route registered",
@@ -36,47 +37,33 @@ func TestAPI_Run(t *testing.T) {
 				path:   "/",
 				status: http.StatusOK,
 			},
-			wantErr: false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctx := context.Background()
+			ctx, cancel := context.WithTimeout(t.Context(), 5*time.Second)
+			defer cancel()
 			a := api{
 				server: &http.Server{Addr: ":8080"}, //nolint:gosec // irrelevant
 				router: chi.NewRouter(),
 			}
 
-			if err := a.RegisterRoutes(ctx); err != nil {
-				t.Fatalf("Failed to register routes: %v", err)
-			}
-
+			require.NoError(t, a.RegisterRoutes(ctx))
 			go func() {
-				if err := a.Run(ctx); (err != nil) != tt.wantErr {
-					t.Errorf("Run() error = %v, wantErr %v", err, tt.wantErr)
-				}
+				require.NoError(t, a.Run(ctx), "Failed to run api")
 			}()
-			time.Sleep(10 * time.Millisecond)
-			if !tt.wantErr {
-				req := httptest.NewRequest(tt.want.method, tt.want.path, http.NoBody)
-				rec := httptest.NewRecorder()
-				a.router.ServeHTTP(rec, req)
+			<-time.After(100 * time.Millisecond)
 
-				if status := rec.Result().StatusCode; status != tt.want.status {
-					t.Errorf("Handler for route %s returned wrong status code: got %v want %v", tt.want.path, status, tt.want.status)
-				}
+			req := httptest.NewRequest(tt.want.method, tt.want.path, http.NoBody)
+			rec := httptest.NewRecorder()
+			a.router.ServeHTTP(rec, req)
 
-				defer func() {
-					err := rec.Result().Body.Close()
-					if err != nil {
-						t.Fatalf("Failed to close recoder body")
-					}
-				}()
-				if err := a.Shutdown(ctx); err != nil {
-					t.Fatalf("Failed to shutdown api: %v", err)
-				}
-			}
+			status := rec.Result().StatusCode
+			assert.Equal(t, tt.want.status, status, "Handler for route %s returned wrong status code: got %v want %v", tt.want.path, status, tt.want.status)
+
+			defer func() { require.NoError(t, rec.Result().Body.Close(), "Failed to close recorder body") }()
+			require.NoError(t, a.Shutdown(ctx), "Failed to shutdown api")
 		})
 	}
 }
@@ -160,7 +147,7 @@ func TestAPI_RegisterRoutes(t *testing.T) {
 				router: chi.NewRouter(),
 			}
 
-			err := a.RegisterRoutes(context.Background(), tt.routes...)
+			err := a.RegisterRoutes(t.Context(), tt.routes...)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("RegisterRoutes() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -186,7 +173,7 @@ func TestAPI_ShutdownWhenContextCanceled(t *testing.T) {
 		router: chi.NewRouter(),
 		server: &http.Server{}, //nolint:gosec
 	}
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(t.Context())
 	err := a.RegisterRoutes(ctx)
 	if err != nil {
 		t.Fatalf("Failed to register routes")
@@ -199,7 +186,7 @@ func TestAPI_ShutdownWhenContextCanceled(t *testing.T) {
 }
 
 func TestAPI_OkHandler(t *testing.T) {
-	ctx := context.Background()
+	ctx := t.Context()
 
 	req, err := http.NewRequestWithContext(ctx, "GET", "/okHandler", http.NoBody)
 	if err != nil {

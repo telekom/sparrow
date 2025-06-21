@@ -5,7 +5,6 @@
 package metrics
 
 import (
-	"context"
 	"reflect"
 	"testing"
 
@@ -108,7 +107,7 @@ func TestMetrics_InitTracing(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			m := New(tt.config)
-			if err := m.InitTracing(context.Background()); (err != nil) != tt.wantErr {
+			if err := m.InitTracing(t.Context()); (err != nil) != tt.wantErr {
 				t.Errorf("Metrics.InitTracing() error = %v", err)
 			}
 
@@ -116,7 +115,7 @@ func TestMetrics_InitTracing(t *testing.T) {
 				t.Errorf("Metrics.InitTracing() type = %T, want = %T", tp, &sdktrace.TracerProvider{})
 			}
 
-			if err := m.Shutdown(context.Background()); err != nil {
+			if err := m.Shutdown(t.Context()); err != nil {
 				t.Fatalf("Metrics.Shutdown() error = %v", err)
 			}
 		})

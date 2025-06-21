@@ -148,7 +148,7 @@ func TestDNS_Run(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctx := context.Background()
+			ctx := t.Context()
 			c := tt.mockSetup()
 
 			cResult := make(chan checks.ResultDTO, 1)
@@ -198,7 +198,7 @@ func TestDNS_Run(t *testing.T) {
 }
 
 func TestDNS_Run_Context_Done(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(t.Context())
 
 	c := NewCheck()
 	cResult := make(chan checks.ResultDTO, 1)

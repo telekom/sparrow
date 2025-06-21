@@ -57,7 +57,7 @@ func TestLatency_Run(t *testing.T) {
 				},
 			},
 			targets: []string{successURL},
-			ctx:     context.Background(),
+			ctx:     t.Context(),
 			want: checks.Result{
 				Data: map[string]result{
 					successURL: {Code: http.StatusOK, Error: nil, Total: 0},
@@ -89,7 +89,7 @@ func TestLatency_Run(t *testing.T) {
 				},
 			},
 			targets: []string{successURL, failURL, timeoutURL},
-			ctx:     context.Background(),
+			ctx:     t.Context(),
 			want: checks.Result{
 				Data: map[string]result{
 					successURL: {Code: http.StatusOK, Error: nil, Total: 0},
@@ -184,7 +184,7 @@ func TestLatency_check(t *testing.T) {
 			name:                "no target",
 			registeredEndpoints: nil,
 			targets:             []string{},
-			ctx:                 context.Background(),
+			ctx:                 t.Context(),
 			want:                map[string]result{},
 		},
 		{
@@ -201,7 +201,7 @@ func TestLatency_check(t *testing.T) {
 				},
 			},
 			targets: []string{successURL},
-			ctx:     context.Background(),
+			ctx:     t.Context(),
 			want: map[string]result{
 				successURL: {Code: http.StatusOK, Error: nil, Total: 0},
 			},
@@ -229,7 +229,7 @@ func TestLatency_check(t *testing.T) {
 				},
 			},
 			targets: []string{successURL, failURL, timeoutURL},
-			ctx:     context.Background(),
+			ctx:     t.Context(),
 			want: map[string]result{
 				successURL: {
 					Code:  200,

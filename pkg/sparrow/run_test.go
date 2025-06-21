@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/telekom/sparrow/pkg/api"
 	"github.com/telekom/sparrow/pkg/checks"
 	"github.com/telekom/sparrow/pkg/checks/dns"
@@ -22,6 +23,7 @@ import (
 	"github.com/telekom/sparrow/pkg/sparrow/targets/interactor"
 	"github.com/telekom/sparrow/pkg/sparrow/targets/remote/gitlab"
 	managermock "github.com/telekom/sparrow/pkg/sparrow/targets/test"
+	"github.com/telekom/sparrow/test"
 )
 
 // TestSparrow_Run_FullComponentStart tests that the Run method starts the API,
@@ -44,7 +46,7 @@ func TestSparrow_Run_FullComponentStart(t *testing.T) {
 			},
 			Config: interactor.Config{
 				Gitlab: gitlab.Config{
-					BaseURL:   "https://telekom.com",
+					BaseURL:   test.GitlabBaseURL,
 					Token:     "my-cool-token",
 					ProjectID: 42,
 				},
@@ -53,16 +55,12 @@ func TestSparrow_Run_FullComponentStart(t *testing.T) {
 	}
 
 	s := New(c)
-	ctx := context.Background()
-	go func() {
-		err := s.Run(ctx)
-		if err != nil {
-			t.Errorf("Sparrow.Run() error = %v", err)
-		}
-	}()
+	ctx, cancel := context.WithCancel(t.Context())
+	defer cancel()
+	go func() { require.ErrorIs(t, s.Run(ctx), ErrFinalShutdown) }()
 
-	t.Log("Running sparrow for 10ms")
-	time.Sleep(10 * time.Millisecond)
+	t.Log("Running sparrow for 100ms")
+	<-time.After(100 * time.Millisecond)
 }
 
 // TestSparrow_Run_ContextCancel tests that after a context cancels the Run method
@@ -79,7 +77,7 @@ func TestSparrow_Run_ContextCancel(t *testing.T) {
 
 	s := New(c)
 	s.tarMan = &managermock.MockTargetManager{}
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(t.Context())
 	go func() {
 		err := s.Run(ctx)
 		t.Logf("Sparrow exited with error: %v", err)
@@ -101,13 +99,8 @@ func TestSparrow_Run_ContextCancel(t *testing.T) {
 func TestSparrow_enrichTargets(t *testing.T) {
 	t.Parallel()
 	now := time.Now()
-	testTarget := "https://localhost.de"
-	gt := []checks.GlobalTarget{
-		{
-			Url:      testTarget,
-			LastSeen: now,
-		},
-	}
+	gt := test.SparrowAZ1(t, now)
+
 	tests := []struct {
 		name          string
 		config        runtime.Config
@@ -117,7 +110,7 @@ func TestSparrow_enrichTargets(t *testing.T) {
 		{
 			name:          "no config",
 			config:        runtime.Config{},
-			globalTargets: gt,
+			globalTargets: []checks.GlobalTarget{gt},
 			expected:      runtime.Config{},
 		},
 		{
@@ -130,33 +123,13 @@ func TestSparrow_enrichTargets(t *testing.T) {
 					Targets: nil,
 				},
 			},
-			globalTargets: gt,
+			globalTargets: []checks.GlobalTarget{gt},
 			expected: runtime.Config{
 				Health: &health.Config{
-					Targets: []string{testTarget},
+					Targets: []string{gt.String()},
 				},
 				Latency: &latency.Config{
-					Targets: []string{testTarget},
-				},
-			},
-		},
-		{
-			name: "config with empty targets",
-			config: runtime.Config{
-				Health: &health.Config{
-					Targets: nil,
-				},
-				Latency: &latency.Config{
-					Targets: nil,
-				},
-			},
-			globalTargets: gt,
-			expected: runtime.Config{
-				Health: &health.Config{
-					Targets: []string{testTarget},
-				},
-				Latency: &latency.Config{
-					Targets: []string{testTarget},
+					Targets: []string{gt.String()},
 				},
 			},
 		},
@@ -170,13 +143,13 @@ func TestSparrow_enrichTargets(t *testing.T) {
 					Targets: []string{"https://telekom.com"},
 				},
 			},
-			globalTargets: gt,
+			globalTargets: []checks.GlobalTarget{gt},
 			expected: runtime.Config{
 				Health: &health.Config{
-					Targets: []string{"https://telekom.com", testTarget},
+					Targets: []string{"https://telekom.com", gt.String()},
 				},
 				Latency: &latency.Config{
-					Targets: []string{"https://telekom.com", testTarget},
+					Targets: []string{"https://telekom.com", gt.String()},
 				},
 			},
 		},
@@ -187,10 +160,10 @@ func TestSparrow_enrichTargets(t *testing.T) {
 					Targets: []string{"telekom.com"},
 				},
 			},
-			globalTargets: gt,
+			globalTargets: []checks.GlobalTarget{gt},
 			expected: runtime.Config{
 				Dns: &dns.Config{
-					Targets: []string{"telekom.com", "localhost.de"},
+					Targets: []string{"telekom.com", gt.Hostname()},
 				},
 			},
 		},
@@ -203,12 +176,12 @@ func TestSparrow_enrichTargets(t *testing.T) {
 					},
 				},
 			},
-			globalTargets: gt,
+			globalTargets: []checks.GlobalTarget{gt},
 			expected: runtime.Config{
 				Traceroute: &traceroute.Config{
 					Targets: []traceroute.Target{
 						{Addr: "telekom.com", Port: 443},
-						{Addr: "localhost.de", Port: 443},
+						{Addr: gt.Hostname(), Port: portOrFail(t, gt)},
 					},
 				},
 			},
@@ -217,13 +190,13 @@ func TestSparrow_enrichTargets(t *testing.T) {
 			name: "config has a target already present in global targets - no duplicates",
 			config: runtime.Config{
 				Health: &health.Config{
-					Targets: []string{testTarget},
+					Targets: []string{gt.String()},
 				},
 			},
-			globalTargets: gt,
+			globalTargets: []checks.GlobalTarget{gt},
 			expected: runtime.Config{
 				Health: &health.Config{
-					Targets: []string{testTarget},
+					Targets: []string{gt.String()},
 				},
 			},
 		},
@@ -231,16 +204,16 @@ func TestSparrow_enrichTargets(t *testing.T) {
 			name: "global targets contains self - do not add to config",
 			config: runtime.Config{
 				Health: &health.Config{
-					Targets: []string{testTarget},
+					Targets: []string{gt.String()},
 				},
 			},
-			globalTargets: append(gt, checks.GlobalTarget{
-				Url:      "https://sparrow.telekom.com",
-				LastSeen: now,
-			}),
+			globalTargets: []checks.GlobalTarget{
+				gt,
+				test.SparrowLocal(t, now),
+			},
 			expected: runtime.Config{
 				Health: &health.Config{
-					Targets: []string{testTarget},
+					Targets: []string{gt.String()},
 				},
 			},
 		},
@@ -251,18 +224,10 @@ func TestSparrow_enrichTargets(t *testing.T) {
 					Targets: []string{},
 				},
 			},
-			globalTargets: []checks.GlobalTarget{
-				{
-					Url:      "http://az1.sparrow.telekom.com",
-					LastSeen: now,
-				},
-				{
-					Url: "https://az2.sparrow.telekom.com",
-				},
-			},
+			globalTargets: []checks.GlobalTarget{gt, test.SparrowAZ2(t, now)},
 			expected: runtime.Config{
 				Dns: &dns.Config{
-					Targets: []string{"az1.sparrow.telekom.com", "az2.sparrow.telekom.com"},
+					Targets: []string{gt.Hostname(), test.SparrowAZ2(t, now).Hostname()},
 				},
 			},
 		},
@@ -275,11 +240,18 @@ func TestSparrow_enrichTargets(t *testing.T) {
 					Targets: tt.globalTargets,
 				},
 				config: &config.Config{
-					SparrowName: "sparrow.telekom.com",
+					SparrowName: test.SparrowLocalName,
 				},
 			}
-			got := s.enrichTargets(context.Background(), tt.config)
+			got := s.enrichTargets(t.Context(), tt.config)
 			assert.Equal(t, tt.expected, got)
 		})
 	}
+}
+
+func portOrFail(t testing.TB, g checks.GlobalTarget) int {
+	t.Helper()
+	port, err := g.Port()
+	require.NoError(t, err)
+	return port
 }

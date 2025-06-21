@@ -87,7 +87,7 @@ func Test_getHealth(t *testing.T) {
 		{
 			name: "status 200",
 			args: args{
-				ctx:    context.Background(),
+				ctx:    t.Context(),
 				client: &http.Client{},
 				url:    endpoint,
 			},
@@ -97,7 +97,7 @@ func Test_getHealth(t *testing.T) {
 		{
 			name: "status not 200",
 			args: args{
-				ctx:    context.Background(),
+				ctx:    t.Context(),
 				client: &http.Client{},
 				url:    endpoint,
 			},
@@ -117,7 +117,7 @@ func Test_getHealth(t *testing.T) {
 		{
 			name: "unknown url",
 			args: args{
-				ctx:    context.Background(),
+				ctx:    t.Context(),
 				client: &http.Client{},
 				url:    "unknown url",
 			},
@@ -150,7 +150,7 @@ func TestHealth_Check(t *testing.T) {
 			name:                "no target",
 			registeredEndpoints: nil,
 			targets:             []string{},
-			ctx:                 context.Background(),
+			ctx:                 t.Context(),
 			want:                map[string]string{},
 		},
 		{
@@ -161,7 +161,7 @@ func TestHealth_Check(t *testing.T) {
 			targets: []string{
 				"https://api.test.com",
 			},
-			ctx: context.Background(),
+			ctx: t.Context(),
 			want: map[string]string{
 				"https://api.test.com": "healthy",
 			},
@@ -174,7 +174,7 @@ func TestHealth_Check(t *testing.T) {
 			targets: []string{
 				"https://api.test.com",
 			},
-			ctx: context.Background(),
+			ctx: t.Context(),
 			want: map[string]string{
 				"https://api.test.com": "unhealthy",
 			},
@@ -195,7 +195,7 @@ func TestHealth_Check(t *testing.T) {
 				"https://api4.test.com",
 				"https://api5.test.com",
 			},
-			ctx: context.Background(),
+			ctx: t.Context(),
 			want: map[string]string{
 				"https://api1.test.com": "healthy",
 				"https://api2.test.com": "unhealthy",

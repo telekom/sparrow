@@ -62,13 +62,7 @@ func (c *Config) Validate() error {
 func (c *Config) Enrich(ctx context.Context, targets []checks.GlobalTarget) {
 	log := logger.FromContext(ctx)
 	for _, t := range targets {
-		u, err := t.URL()
-		if err != nil {
-			log.ErrorContext(ctx, "Failed to get URL from target", "target", t.String(), "error", err)
-			continue
-		}
-
-		target := u.String()
+		target := t.URL.String()
 		if !slices.Contains(c.Targets, target) {
 			log.DebugContext(ctx, "Adding target to latency check", "target", target)
 			c.Targets = append(c.Targets, target)

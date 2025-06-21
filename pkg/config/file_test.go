@@ -5,7 +5,6 @@
 package config
 
 import (
-	"context"
 	"fmt"
 	"io/fs"
 	"reflect"
@@ -79,7 +78,7 @@ func TestFileLoader_Run(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctx := context.Background()
+			ctx := t.Context()
 			result := make(chan runtime.Config, 1)
 			f := NewFileLoader(&Config{
 				Loader: tt.config,
@@ -212,7 +211,7 @@ func TestFileLoader_getRuntimeConfig(t *testing.T) {
 				f.fsys = tt.mockFS(t)
 			}
 
-			cfg, err := f.getRuntimeConfig(context.Background())
+			cfg, err := f.getRuntimeConfig(t.Context())
 			if (err != nil) != tt.wantErr {
 				t.Errorf("getRuntimeConfig() error %v, want %v", err, tt.wantErr)
 			}

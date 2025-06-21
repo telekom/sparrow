@@ -61,17 +61,13 @@ func (c *Config) Validate() error {
 func (c *Config) Enrich(ctx context.Context, targets []checks.GlobalTarget) {
 	log := logger.FromContext(ctx)
 	for _, t := range targets {
-		u, err := t.URL()
-		if err != nil {
-			log.ErrorContext(ctx, "Failed to get URL from target", "target", t.String(), "error", err)
-			continue
-		}
-
+		u := t.URL
 		// Error handling is not necessary here, as the URL has been validated before.
 		port, _ := t.Port()
-		if !slices.ContainsFunc(c.Targets, func(t Target) bool {
-			return t.Addr == u.Hostname() && t.Port == port
+		if !slices.ContainsFunc(c.Targets, func(tg Target) bool {
+			return tg.Addr == u.Hostname() && tg.Port == port
 		}) {
+			log.DebugContext(ctx, "Adding target to traceroute check", "target", u.Hostname(), "port", port)
 			c.Targets = append(c.Targets, Target{
 				Addr: u.Hostname(),
 				Port: port,

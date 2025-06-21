@@ -116,7 +116,7 @@ func (s *Sparrow) Run(ctx context.Context) error {
 			}
 		case <-s.cDone:
 			log.InfoContext(ctx, "Sparrow was shut down")
-			return fmt.Errorf("sparrow was shut down")
+			return ErrFinalShutdown
 		}
 	}
 }
@@ -129,13 +129,8 @@ func (s *Sparrow) enrichTargets(ctx context.Context, cfg runtime.Config) runtime
 	}
 	var gts []checks.GlobalTarget
 	for _, t := range s.tarMan.GetTargets() {
-		hostname, err := t.Hostname()
-		if err != nil {
-			logger.FromContext(ctx).ErrorContext(ctx, "Failed to get hostname from target", "target", t, "error", err)
-			continue
-		}
 		// We don't need to enrich the configs with the own hostname
-		if s.config.SparrowName == hostname {
+		if s.config.SparrowName == t.Hostname() {
 			continue
 		}
 		gts = append(gts, t)

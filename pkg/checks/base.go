@@ -6,6 +6,9 @@ package checks
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
 	"net/url"
 	"strconv"
 	"sync"
@@ -86,22 +89,15 @@ type ResultDTO struct {
 // GlobalTarget includes the basic information regarding
 // other Sparrow instances, which this Sparrow can communicate with.
 type GlobalTarget struct {
-	Url      string    `json:"url"`
-	LastSeen time.Time `json:"lastSeen"`
-}
-
-// URL returns the [url.URL] representation of the target.
-func (g GlobalTarget) URL() (*url.URL, error) {
-	return url.Parse(g.Url)
+	// URL is the URL of the target instance.
+	URL *url.URL
+	// LastSeen is the last time this target was seen.
+	LastSeen time.Time
 }
 
 // Hostname returns the host of the target URL, stripping the port if present.
-func (g GlobalTarget) Hostname() (string, error) {
-	u, err := g.URL()
-	if err != nil {
-		return "", err
-	}
-	return u.Hostname(), nil
+func (g GlobalTarget) Hostname() string {
+	return g.URL.Hostname()
 }
 
 // Default ports
@@ -112,27 +108,59 @@ const (
 
 // Port returns the port of the target URL.
 func (g GlobalTarget) Port() (int, error) {
-	u, err := g.URL()
-	if err != nil {
-		return 0, err
-	}
-
 	// If the port is not specified, the default port for the scheme is returned.
-	if u.Port() == "" {
-		switch u.Scheme {
+	if g.URL.Port() == "" {
+		switch g.URL.Scheme {
 		case "http":
 			return httpPort, nil
 		case "https":
 			return httpsPort, nil
 		default:
-			return 0, nil
+			return 0, errors.New("unknown scheme")
 		}
 	}
 
-	return strconv.Atoi(u.Port())
+	return strconv.Atoi(g.URL.Port())
 }
 
 // String returns the URL of the target.
 func (g GlobalTarget) String() string {
-	return g.Url
+	return g.URL.String()
+}
+
+var (
+	_ json.Marshaler   = (*GlobalTarget)(nil)
+	_ json.Unmarshaler = (*GlobalTarget)(nil)
+)
+
+// rawTarget is the [GlobalTarget] struct used for JSON marshaling and unmarshaling.
+type rawTarget struct {
+	Url      string    `json:"url"`
+	LastSeen time.Time `json:"lastSeen"`
+}
+
+// MarshalJSON marshals the GlobalTarget into JSON format.
+func (g GlobalTarget) MarshalJSON() ([]byte, error) {
+	return json.Marshal(rawTarget{
+		Url:      g.URL.String(),
+		LastSeen: g.LastSeen,
+	})
+}
+
+// UnmarshalJSON unmarshals the JSON data into a GlobalTarget.
+func (g *GlobalTarget) UnmarshalJSON(data []byte) error {
+	var r rawTarget
+	if err := json.Unmarshal(data, &r); err != nil {
+		return err
+	}
+
+	u, err := url.Parse(r.Url)
+	if err != nil {
+		return fmt.Errorf("failed to parse URL %q: %w", r.Url, err)
+	}
+
+	g.URL = u
+	g.LastSeen = r.LastSeen
+
+	return nil
 }

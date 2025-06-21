@@ -112,7 +112,7 @@ func TestHttpLoader_GetRuntimeConfig(t *testing.T) {
 			)
 
 			handler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug})
-			ctx := logger.IntoContext(context.Background(), logger.NewLogger(handler).WithGroup("httpLoader-test"))
+			ctx := logger.IntoContext(t.Context(), logger.NewLogger(handler).WithGroup("httpLoader-test"))
 			ctx, cancel := context.WithTimeout(ctx, time.Second*10)
 			defer cancel()
 
@@ -218,7 +218,7 @@ func TestHttpLoader_Run(t *testing.T) {
 			}
 
 			// shutdown routine
-			ctx := context.Background()
+			ctx := t.Context()
 			var wg sync.WaitGroup
 			wg.Add(1)
 			if tt.interval > 0 {
@@ -253,7 +253,7 @@ func TestHttpLoader_Shutdown(t *testing.T) {
 			hl := &HttpLoader{
 				done: make(chan struct{}, 1),
 			}
-			hl.Shutdown(context.Background())
+			hl.Shutdown(t.Context())
 
 			// check if the signal is sent
 			select {
@@ -306,7 +306,7 @@ func TestHttpLoader_Run_config_sent_to_channel(t *testing.T) {
 		done: make(chan struct{}, 1),
 	}
 
-	ctx := context.Background()
+	ctx := t.Context()
 	go func() {
 		err := hl.Run(ctx)
 		if err != nil {
@@ -334,11 +334,7 @@ func TestHttpLoader_Run_empty_config_sent_to_channel_500(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
-	resp, err := httpmock.NewJsonResponder(http.StatusInternalServerError, nil)
-	if err != nil {
-		t.Fatalf("Failed creating json responder: %v", err)
-	}
-
+	resp := httpmock.NewJsonResponderOrPanic(http.StatusInternalServerError, http.NoBody)
 	httpmock.RegisterResponder(http.MethodGet, "https://api.test.com/test", resp)
 
 	cRuntime := make(chan runtime.Config, 1)
@@ -362,7 +358,7 @@ func TestHttpLoader_Run_empty_config_sent_to_channel_500(t *testing.T) {
 		done: make(chan struct{}, 1),
 	}
 
-	ctx := context.Background()
+	ctx := t.Context()
 	go func() {
 		err := hl.Run(ctx)
 		if err != nil {
@@ -409,7 +405,7 @@ func TestHttpLoader_Run_empty_config_sent_to_channel_client_error(t *testing.T) 
 		done: make(chan struct{}, 1),
 	}
 
-	ctx := context.Background()
+	ctx := t.Context()
 	go func() {
 		err := hl.Run(ctx)
 		if err != nil {

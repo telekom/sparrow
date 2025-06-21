@@ -4,6 +4,8 @@
 
 package sparrow
 
+import "errors"
+
 // ErrShutdown holds any errors that may
 // have occurred during shutdown of the Sparrow
 type ErrShutdown struct {
@@ -16,3 +18,5 @@ type ErrShutdown struct {
 func (e ErrShutdown) HasError() bool {
 	return e.errAPI != nil || e.errTarMan != nil || e.errMetrics != nil
 }
+
+var ErrFinalShutdown = errors.New("sparrow was shut down")

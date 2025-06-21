@@ -25,7 +25,7 @@ import (
 )
 
 func TestRun_CheckRunError(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(t.Context())
 	defer cancel()
 
 	cc := NewChecksController(db.NewInMemory(), metrics.New(metrics.Config{}))
@@ -66,7 +66,7 @@ func TestRun_CheckRunError(t *testing.T) {
 }
 
 func TestRun_ContextCancellation(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(t.Context())
 
 	cc := NewChecksController(db.NewInMemory(), metrics.New(metrics.Config{}))
 
@@ -122,11 +122,11 @@ func TestChecksController_Shutdown(t *testing.T) {
 
 			if tt.checks != nil {
 				for _, check := range tt.checks {
-					cc.RegisterCheck(context.Background(), check)
+					cc.RegisterCheck(t.Context(), check)
 				}
 			}
 
-			cc.Shutdown(context.Background())
+			cc.Shutdown(t.Context())
 
 			select {
 			case <-cc.done:
@@ -142,7 +142,7 @@ func TestChecksController_Shutdown(t *testing.T) {
 }
 
 func TestChecksController_Reconcile(t *testing.T) {
-	ctx, cancel := logger.NewContextWithLogger(context.Background())
+	ctx, cancel := logger.NewContextWithLogger(t.Context())
 	defer cancel()
 	rtcfg := &runtime.Config{}
 	tests := []struct {
@@ -276,7 +276,7 @@ func TestChecksController_Reconcile(t *testing.T) {
 // TestChecksController_Reconcile_Update tests the update of the checks
 // when the runtime configuration changes.
 func TestChecksController_Reconcile_Update(t *testing.T) {
-	ctx, cancel := logger.NewContextWithLogger(context.Background())
+	ctx, cancel := logger.NewContextWithLogger(t.Context())
 	defer cancel()
 
 	tests := []struct {
@@ -359,7 +359,7 @@ func TestChecksController_RegisterCheck(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cc := tt.setup()
-			cc.RegisterCheck(context.Background(), tt.check)
+			cc.RegisterCheck(t.Context(), tt.check)
 			if cc.checks.Iter()[0] != tt.check {
 				t.Errorf("Expected one check to be registered")
 			}
@@ -382,7 +382,7 @@ func TestChecksController_UnregisterCheck(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			cc := NewChecksController(db.NewInMemory(), metrics.New(metrics.Config{}))
 
-			cc.UnregisterCheck(context.Background(), tt.check)
+			cc.UnregisterCheck(t.Context(), tt.check)
 
 			if len(cc.checks.Iter()) != 0 {
 				t.Errorf("Expected check to be unregistered")
@@ -457,7 +457,7 @@ func TestGenerateCheckSpecs(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctx := context.Background()
+			ctx := t.Context()
 			cc := &ChecksController{
 				checks: runtime.Checks{},
 			}

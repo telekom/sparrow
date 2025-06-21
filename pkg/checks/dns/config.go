@@ -57,12 +57,7 @@ func (c *Config) Validate() error {
 func (c *Config) Enrich(ctx context.Context, targets []checks.GlobalTarget) {
 	log := logger.FromContext(ctx)
 	for _, t := range targets {
-		hostname, err := t.Hostname()
-		if err != nil {
-			log.ErrorContext(ctx, "Failed to get hostname from target", "target", t.String(), "error", err)
-			continue
-		}
-
+		hostname := t.Hostname()
 		if !slices.Contains(c.Targets, hostname) {
 			log.DebugContext(ctx, "Adding target to DNS check", "target", hostname)
 			c.Targets = append(c.Targets, hostname)

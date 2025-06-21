@@ -5,7 +5,6 @@
 package gitlab
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"reflect"
@@ -15,6 +14,7 @@ import (
 	"github.com/jarcoal/httpmock"
 	"github.com/telekom/sparrow/pkg/checks"
 	"github.com/telekom/sparrow/pkg/sparrow/targets/remote"
+	"github.com/telekom/sparrow/test"
 )
 
 func Test_gitlab_fetchFileList(t *testing.T) {
@@ -49,30 +49,30 @@ func Test_gitlab_fetchFileList(t *testing.T) {
 		{
 			name: "success - 1 target",
 			want: []string{
-				"test.json",
+				"sparrow.telekom.com.json",
 			},
 			wantErr:  false,
 			mockCode: http.StatusOK,
 			mockBody: []file{
 				{
-					Name: "test.json",
+					Name: "sparrow.telekom.com.json",
 				},
 			},
 		},
 		{
 			name: "success - 2 targets",
 			want: []string{
-				"test.json",
-				"test2.json",
+				"sparrow.telekom.com.json",
+				"sparrow2.telekom.com.json",
 			},
 			wantErr:  false,
 			mockCode: http.StatusOK,
 			mockBody: []file{
 				{
-					Name: "test.json",
+					Name: "sparrow.telekom.com.json",
 				},
 				{
-					Name: "test2.json",
+					Name: "sparrow2.telekom.com.json",
 				},
 			},
 		},
@@ -89,22 +89,19 @@ func Test_gitlab_fetchFileList(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			resp, err := httpmock.NewJsonResponder(tt.mockCode, tt.mockBody)
-			if err != nil {
-				t.Fatalf("error creating mock response: %v", err)
-			}
-			httpmock.RegisterResponder("GET", fmt.Sprintf("http://test/api/v4/projects/1/repository/tree?order_by=id&pagination=keyset&per_page=%d&ref=main&sort=asc", paginationPerPage), resp)
+			resp := httpmock.NewJsonResponderOrPanic(tt.mockCode, tt.mockBody)
+			httpmock.RegisterResponder(http.MethodGet, fmt.Sprintf("%s/projects/1/repository/tree?order_by=id&pagination=keyset&per_page=%d&ref=main&sort=asc", test.GitlabAPIURL, paginationPerPage), resp)
 
 			g := &client{
 				config: Config{
-					BaseURL:   "http://test",
+					BaseURL:   test.GitlabBaseURL,
 					ProjectID: 1,
 					Token:     "test",
 					Branch:    fallbackBranch,
 				},
 				client: http.DefaultClient,
 			}
-			got, err := g.fetchFileList(context.Background())
+			got, err := g.fetchFileList(t.Context())
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("FetchFiles() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -139,13 +136,13 @@ func Test_gitlab_FetchFiles(t *testing.T) {
 			name: "success - 1 target",
 			want: []checks.GlobalTarget{
 				{
-					Url:      "test",
+					URL:      test.ToURLOrFail(t, "sparrow.telekom.com"),
 					LastSeen: time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC),
 				},
 			},
 			fileList: []file{
 				{
-					Name: "test.json",
+					Name: "sparrow.telekom.com.json",
 				},
 			},
 			wantErr:  false,
@@ -155,20 +152,20 @@ func Test_gitlab_FetchFiles(t *testing.T) {
 			name: "success - 2 targets",
 			want: []checks.GlobalTarget{
 				{
-					Url:      "test",
+					URL:      test.ToURLOrFail(t, "sparrow.telekom.com"),
 					LastSeen: time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC),
 				},
 				{
-					Url:      "test2",
+					URL:      test.ToURLOrFail(t, "sparrow2.telekom.com"),
 					LastSeen: time.Date(2021, 2, 1, 0, 0, 0, 0, time.UTC),
 				},
 			},
 			fileList: []file{
 				{
-					Name: "test.json",
+					Name: "sparrow.telekom.com.json",
 				},
 				{
-					Name: "test2.json",
+					Name: "sparrow2.telekom.com.json",
 				},
 			},
 			wantErr:  false,
@@ -180,7 +177,7 @@ func Test_gitlab_FetchFiles(t *testing.T) {
 	defer httpmock.DeactivateAndReset()
 	g := &client{
 		config: Config{
-			BaseURL:   "http://test",
+			BaseURL:   test.GitlabBaseURL,
 			ProjectID: 1,
 			Token:     "test",
 			Branch:    fallbackBranch,
@@ -190,22 +187,14 @@ func Test_gitlab_FetchFiles(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// setup mock responses
 			for i, target := range tt.want {
-				resp, err := httpmock.NewJsonResponder(tt.mockCode, target)
-				if err != nil {
-					t.Fatalf("error creating mock response: %v", err)
-				}
-				httpmock.RegisterResponder("GET", fmt.Sprintf("http://test/api/v4/projects/1/repository/files/%s/raw?ref=main", tt.fileList[i].Name), resp)
+				resp := httpmock.NewJsonResponderOrPanic(tt.mockCode, target)
+				httpmock.RegisterResponder(http.MethodGet, fmt.Sprintf("%s/projects/1/repository/files/%s/raw?ref=main", test.GitlabAPIURL, tt.fileList[i].Name), resp)
 			}
+			resp := httpmock.NewJsonResponderOrPanic(tt.mockCode, tt.fileList)
+			httpmock.RegisterResponder(http.MethodGet, fmt.Sprintf("%s/projects/1/repository/tree?order_by=id&pagination=keyset&per_page=%d&ref=main&sort=asc", test.GitlabAPIURL, paginationPerPage), resp)
 
-			resp, err := httpmock.NewJsonResponder(tt.mockCode, tt.fileList)
-			if err != nil {
-				t.Fatalf("error creating mock response: %v", err)
-			}
-			httpmock.RegisterResponder("GET", fmt.Sprintf("http://test/api/v4/projects/1/repository/tree?order_by=id&pagination=keyset&per_page=%d&ref=main&sort=asc", paginationPerPage), resp)
-
-			got, err := g.FetchFiles(context.Background())
+			got, err := g.FetchFiles(t.Context())
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("FetchFiles() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -248,7 +237,7 @@ func Test_gitlab_fetchFiles_error_cases(t *testing.T) {
 			mockResponses: []mockResponses{
 				{
 					response: checks.GlobalTarget{
-						Url:      "test",
+						URL:      test.ToURLOrFail(t, "test"),
 						LastSeen: time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC),
 					},
 					err: false,
@@ -269,7 +258,7 @@ func Test_gitlab_fetchFiles_error_cases(t *testing.T) {
 	defer httpmock.DeactivateAndReset()
 	g := &client{
 		config: Config{
-			BaseURL:   "http://test",
+			BaseURL:   test.GitlabBaseURL,
 			ProjectID: 1,
 			Token:     "test",
 			Branch:    fallbackBranch,
@@ -282,17 +271,14 @@ func Test_gitlab_fetchFiles_error_cases(t *testing.T) {
 			for i, target := range tt.mockResponses {
 				if target.err {
 					errResp := httpmock.NewStringResponder(http.StatusInternalServerError, "")
-					httpmock.RegisterResponder("GET", fmt.Sprintf("http://test/api/v4/projects/1/repository/files/%s/raw?ref=main", tt.fileList[i].Name), errResp)
+					httpmock.RegisterResponder(http.MethodGet, fmt.Sprintf("%s/projects/1/repository/files/%s/raw?ref=main", test.GitlabAPIURL, tt.fileList[i].Name), errResp)
 					continue
 				}
-				resp, err := httpmock.NewJsonResponder(http.StatusOK, target)
-				if err != nil {
-					t.Fatalf("error creating mock response: %v", err)
-				}
-				httpmock.RegisterResponder("GET", fmt.Sprintf("http://test/api/v4/projects/1/repository/files/%s/raw?ref=main", tt.fileList[i].Name), resp)
+				resp := httpmock.NewJsonResponderOrPanic(http.StatusOK, target)
+				httpmock.RegisterResponder(http.MethodGet, fmt.Sprintf("%s/projects/1/repository/files/%s/raw?ref=main", test.GitlabAPIURL, tt.fileList[i].Name), resp)
 			}
 
-			_, err := g.FetchFiles(context.Background())
+			_, err := g.FetchFiles(t.Context())
 			if err == nil {
 				t.Fatalf("Expected error but got none.")
 			}
@@ -312,13 +298,13 @@ func TestClient_PutFile(t *testing.T) { //nolint:dupl // no need to refactor yet
 			name: "success",
 			file: remote.File{
 				AuthorEmail: "test@sparrow",
-				AuthorName:  "sparrpw",
+				AuthorName:  "sparrow",
 				Content: checks.GlobalTarget{
-					Url:      "https://test.de",
+					URL:      test.ToURLOrFail(t, "https://sparrow.telekom.com"),
 					LastSeen: now,
 				},
 				CommitMessage: "test-commit",
-				Name:          "test.de.json",
+				Name:          "sparrow.telekom.com.json",
 			},
 			mockCode: http.StatusOK,
 		},
@@ -326,13 +312,13 @@ func TestClient_PutFile(t *testing.T) { //nolint:dupl // no need to refactor yet
 			name: "failure - API error",
 			file: remote.File{
 				AuthorEmail: "test@sparrow",
-				AuthorName:  "sparrpw",
+				AuthorName:  "sparrow",
 				Content: checks.GlobalTarget{
-					Url:      "https://test.de",
+					URL:      test.ToURLOrFail(t, "https://sparrow.telekom.com"),
 					LastSeen: now,
 				},
 				CommitMessage: "test-commit",
-				Name:          "test.de.json",
+				Name:          "sparrow.telekom.com.json",
 			},
 			mockCode: http.StatusInternalServerError,
 			wantErr:  true,
@@ -347,7 +333,7 @@ func TestClient_PutFile(t *testing.T) { //nolint:dupl // no need to refactor yet
 	defer httpmock.DeactivateAndReset()
 	g := &client{
 		config: Config{
-			BaseURL:   "http://test",
+			BaseURL:   test.GitlabBaseURL,
 			ProjectID: 1,
 			Token:     "test",
 			Branch:    fallbackBranch,
@@ -359,16 +345,13 @@ func TestClient_PutFile(t *testing.T) { //nolint:dupl // no need to refactor yet
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.wantErr {
 				resp := httpmock.NewStringResponder(tt.mockCode, "")
-				httpmock.RegisterResponder("PUT", fmt.Sprintf("http://test/api/v4/projects/1/repository/files/%s", tt.file.Name), resp)
+				httpmock.RegisterResponder(http.MethodPut, fmt.Sprintf("%s/projects/1/repository/files/%s", test.GitlabAPIURL, tt.file.Name), resp)
 			} else {
-				resp, err := httpmock.NewJsonResponder(tt.mockCode, tt.file)
-				if err != nil {
-					t.Fatalf("error creating mock response: %v", err)
-				}
-				httpmock.RegisterResponder("PUT", fmt.Sprintf("http://test/api/v4/projects/1/repository/files/%s", tt.file.Name), resp)
+				resp := httpmock.NewJsonResponderOrPanic(tt.mockCode, tt.file)
+				httpmock.RegisterResponder(http.MethodPut, fmt.Sprintf("%s/projects/1/repository/files/%s", test.GitlabAPIURL, tt.file.Name), resp)
 			}
 
-			if err := g.PutFile(context.Background(), tt.file); (err != nil) != tt.wantErr {
+			if err := g.PutFile(t.Context(), tt.file); (err != nil) != tt.wantErr {
 				t.Fatalf("PutFile() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -387,13 +370,13 @@ func TestClient_PostFile(t *testing.T) { //nolint:dupl // no need to refactor ye
 			name: "success",
 			file: remote.File{
 				AuthorEmail: "test@sparrow",
-				AuthorName:  "sparrpw",
+				AuthorName:  "sparrow",
 				Content: checks.GlobalTarget{
-					Url:      "https://test.de",
+					URL:      test.ToURLOrFail(t, "https://sparrow.telekom.com"),
 					LastSeen: now,
 				},
 				CommitMessage: "test-commit",
-				Name:          "test.de.json",
+				Name:          "sparrow.telekom.com.json",
 			},
 			mockCode: http.StatusCreated,
 		},
@@ -401,13 +384,13 @@ func TestClient_PostFile(t *testing.T) { //nolint:dupl // no need to refactor ye
 			name: "failure - API error",
 			file: remote.File{
 				AuthorEmail: "test@sparrow",
-				AuthorName:  "sparrpw",
+				AuthorName:  "sparrow",
 				Content: checks.GlobalTarget{
-					Url:      "https://test.de",
+					URL:      test.ToURLOrFail(t, "https://sparrow.telekom.com"),
 					LastSeen: now,
 				},
 				CommitMessage: "test-commit",
-				Name:          "test.de.json",
+				Name:          "sparrow.telekom.com.json",
 			},
 			mockCode: http.StatusInternalServerError,
 			wantErr:  true,
@@ -422,7 +405,7 @@ func TestClient_PostFile(t *testing.T) { //nolint:dupl // no need to refactor ye
 	defer httpmock.DeactivateAndReset()
 	g := &client{
 		config: Config{
-			BaseURL:   "http://test",
+			BaseURL:   test.GitlabBaseURL,
 			ProjectID: 1,
 			Token:     "test",
 			Branch:    fallbackBranch,
@@ -434,16 +417,13 @@ func TestClient_PostFile(t *testing.T) { //nolint:dupl // no need to refactor ye
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.wantErr {
 				resp := httpmock.NewStringResponder(tt.mockCode, "")
-				httpmock.RegisterResponder("POST", fmt.Sprintf("http://test/api/v4/projects/1/repository/files/%s", tt.file.Name), resp)
+				httpmock.RegisterResponder(http.MethodPost, fmt.Sprintf("%s/projects/1/repository/files/%s", test.GitlabAPIURL, tt.file.Name), resp)
 			} else {
-				resp, err := httpmock.NewJsonResponder(tt.mockCode, tt.file)
-				if err != nil {
-					t.Fatalf("error creating mock response: %v", err)
-				}
-				httpmock.RegisterResponder("POST", fmt.Sprintf("http://test/api/v4/projects/1/repository/files/%s", tt.file.Name), resp)
+				resp := httpmock.NewJsonResponderOrPanic(tt.mockCode, tt.file)
+				httpmock.RegisterResponder(http.MethodPost, fmt.Sprintf("%s/projects/1/repository/files/%s", test.GitlabAPIURL, tt.file.Name), resp)
 			}
 
-			if err := g.PostFile(context.Background(), tt.file); (err != nil) != tt.wantErr {
+			if err := g.PostFile(t.Context(), tt.file); (err != nil) != tt.wantErr {
 				t.Fatalf("PostFile() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -459,12 +439,12 @@ func TestClient_DeleteFile(t *testing.T) {
 	}{
 		{
 			name:     "success",
-			fileName: "test.de.json",
+			fileName: "sparrow.telekom.com.json",
 			mockCode: http.StatusNoContent,
 		},
 		{
 			name:     "failure - API error",
-			fileName: "test.de.json",
+			fileName: "sparrow.telekom.com.json",
 			mockCode: http.StatusInternalServerError,
 			wantErr:  true,
 		},
@@ -480,7 +460,7 @@ func TestClient_DeleteFile(t *testing.T) {
 	projID := 1
 	g := &client{
 		config: Config{
-			BaseURL:   "http://test",
+			BaseURL:   test.GitlabBaseURL,
 			ProjectID: 1,
 			Token:     "test",
 			Branch:    fallbackBranch,
@@ -491,7 +471,7 @@ func TestClient_DeleteFile(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			resp := httpmock.NewStringResponder(tt.mockCode, "")
-			httpmock.RegisterResponder("DELETE", fmt.Sprintf("http://test/api/v4/projects/%d/repository/files/%s", projID, tt.fileName), resp)
+			httpmock.RegisterResponder(http.MethodDelete, fmt.Sprintf("%s/projects/%d/repository/files/%s", test.GitlabAPIURL, projID, tt.fileName), resp)
 
 			f := remote.File{
 				Name:          tt.fileName,
@@ -499,7 +479,7 @@ func TestClient_DeleteFile(t *testing.T) {
 				AuthorName:    "sparrow-test",
 				AuthorEmail:   "sparrow-test@sparrow",
 			}
-			if err := g.DeleteFile(context.Background(), f); (err != nil) != tt.wantErr {
+			if err := g.DeleteFile(t.Context(), f); (err != nil) != tt.wantErr {
 				t.Fatalf("DeleteFile() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -575,7 +555,7 @@ func TestClient_fetchDefaultBranch(t *testing.T) {
 	defer httpmock.DeactivateAndReset()
 	g := &client{
 		config: Config{
-			BaseURL:   "http://test",
+			BaseURL:   test.GitlabBaseURL,
 			ProjectID: 1,
 			Token:     "test",
 		},
@@ -584,11 +564,8 @@ func TestClient_fetchDefaultBranch(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			resp, err := httpmock.NewJsonResponder(tt.code, tt.response)
-			if err != nil {
-				t.Fatalf("error creating mock response: %v", err)
-			}
-			httpmock.RegisterResponder(http.MethodGet, "http://test/api/v4/projects/1/repository/branches", resp)
+			resp := httpmock.NewJsonResponderOrPanic(tt.code, tt.response)
+			httpmock.RegisterResponder(http.MethodGet, fmt.Sprintf("%s/projects/1/repository/branches", test.GitlabAPIURL), resp)
 
 			got := g.fetchDefaultBranch()
 			if got != tt.want {
@@ -619,7 +596,7 @@ func Test_client_fetchNextFileList(t *testing.T) {
 			name: "success - no pagination",
 			mock: []mockResponder{
 				{
-					reqUrl:     "https://test.de/pagination",
+					reqUrl:     fmt.Sprintf("%s/pagination", test.GitlabAPIURL),
 					linkHeader: "",
 					statusCode: http.StatusOK,
 					response:   []mockRespFile{{Name: "file1.json"}, {Name: "file2.json"}},
@@ -635,42 +612,38 @@ func Test_client_fetchNextFileList(t *testing.T) {
 			name: "success - with pagination",
 			mock: []mockResponder{
 				{
-					reqUrl:     "https://test.de/pagination",
-					linkHeader: "<https://test.de/pagination?page=2>; rel=\"next\"",
+					reqUrl:     fmt.Sprintf("%s/pagination", test.GitlabAPIURL),
+					linkHeader: fmt.Sprintf("<%s/pagination?page=2>; rel=\"next\"", test.GitlabAPIURL),
 					statusCode: http.StatusOK,
 					response:   []mockRespFile{{Name: "file1.json"}},
 				},
 				{
-					reqUrl:     "https://test.de/pagination?page=2",
-					linkHeader: "<https://test.de/pagination?page=3>; rel=\"next\"",
+					reqUrl:     fmt.Sprintf("%s/pagination?page=2", test.GitlabAPIURL),
+					linkHeader: fmt.Sprintf("<%s/pagination?page=3>; rel=\"next\"", test.GitlabAPIURL),
 					statusCode: http.StatusOK,
 					response:   []mockRespFile{{Name: "file2.json"}},
 				},
 				{
-					reqUrl:     "https://test.de/pagination?page=3",
+					reqUrl:     fmt.Sprintf("%s/pagination?page=3", test.GitlabAPIURL),
 					linkHeader: "",
 					statusCode: http.StatusOK,
 					response:   []mockRespFile{{Name: "file3.json"}},
 				},
 			},
-			want: []string{
-				"file1.json",
-				"file2.json",
-				"file3.json",
-			},
+			want:    []string{"file1.json", "file2.json", "file3.json"},
 			wantErr: false,
 		},
 		{
-			name: "fail - status code nok while paginated requests",
+			name: "fail - bad request while paginated requests",
 			mock: []mockResponder{
 				{
-					reqUrl:     "https://test.de/pagination",
-					linkHeader: "<https://test.de/pagination?page=2>; rel=\"next\"",
+					reqUrl:     fmt.Sprintf("%s/pagination", test.GitlabAPIURL),
+					linkHeader: fmt.Sprintf("<%s/pagination?page=2>; rel=\"next\"", test.GitlabAPIURL),
 					statusCode: http.StatusOK,
 					response:   []mockRespFile{{Name: "file1.json"}},
 				},
 				{
-					reqUrl:     "https://test.de/pagination?page=2",
+					reqUrl:     fmt.Sprintf("%s/pagination?page=2", test.GitlabAPIURL),
 					linkHeader: "",
 					statusCode: http.StatusBadRequest,
 					response:   []mockRespFile{{Name: "file2.json"}},
@@ -685,7 +658,7 @@ func Test_client_fetchNextFileList(t *testing.T) {
 	defer httpmock.DeactivateAndReset()
 	c := &client{
 		config: Config{
-			BaseURL:   "https://test.de",
+			BaseURL:   test.GitlabBaseURL,
 			ProjectID: 1,
 			Token:     "test",
 		},
@@ -712,18 +685,13 @@ func Test_client_fetchNextFileList(t *testing.T) {
 				})
 			}
 
-			got, err := c.fetchNextFileList(context.Background(), tt.mock[0].reqUrl)
-			if err != nil {
-				if !tt.wantErr {
-					t.Fatalf("fetchNextFileList() error = %v, wantErr %v", err, tt.wantErr)
-				}
-				return
+			got, err := c.fetchNextFileList(t.Context(), tt.mock[0].reqUrl)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("fetchNextFileList() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			if tt.wantErr {
-				t.Fatalf("fetchNextFileList() error = %v, wantErr %v", err, tt.wantErr)
-			}
+
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Fatalf("fetchNextFileList() got = %v, want %v", got, tt.want)
+				t.Errorf("fetchNextFileList() got = %v, want %v", got, tt.want)
 			}
 		})
 	}

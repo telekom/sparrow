@@ -53,7 +53,7 @@ func TestNewLogger(t *testing.T) {
 
 			if tt.logLevel != "" {
 				want := getLevel(tt.logLevel)
-				got := log.Enabled(context.Background(), want)
+				got := log.Enabled(t.Context(), want)
 				if !got {
 					t.Errorf("Expected log level: %v", want)
 				}
@@ -73,11 +73,11 @@ func TestNewContextWithLogger(t *testing.T) {
 	}{
 		{
 			name:      "With Background context",
-			parentCtx: context.Background(),
+			parentCtx: t.Context(),
 		},
 		{
 			name:      "With already set logger in context",
-			parentCtx: context.WithValue(context.Background(), logger{}, NewLogger()),
+			parentCtx: context.WithValue(t.Context(), logger{}, NewLogger()),
 		},
 	}
 
@@ -105,12 +105,12 @@ func TestFromContext(t *testing.T) {
 	}{
 		{
 			name: "Context with logger",
-			ctx:  IntoContext(context.Background(), NewLogger(slog.NewJSONHandler(os.Stdout, nil))),
+			ctx:  IntoContext(t.Context(), NewLogger(slog.NewJSONHandler(os.Stdout, nil))),
 			want: NewLogger(slog.NewJSONHandler(os.Stdout, nil)),
 		},
 		{
 			name: "Context without logger",
-			ctx:  context.Background(),
+			ctx:  t.Context(),
 			want: NewLogger(),
 		},
 		{
@@ -138,12 +138,12 @@ func TestMiddleware(t *testing.T) {
 	}{
 		{
 			name:        "With logger in parent context",
-			parentCtx:   IntoContext(context.Background(), NewLogger()),
+			parentCtx:   IntoContext(t.Context(), NewLogger()),
 			expectInCtx: true,
 		},
 		{
 			name:        "Without logger in parent context",
-			parentCtx:   context.Background(),
+			parentCtx:   t.Context(),
 			expectInCtx: true,
 		},
 	}
@@ -216,7 +216,7 @@ func TestNewHandler(t *testing.T) {
 				}
 			}
 
-			ok := handler.Enabled(context.Background(), tt.wantLevel)
+			ok := handler.Enabled(t.Context(), tt.wantLevel)
 			if !ok {
 				t.Errorf("Expected log level: %v", tt.wantLevel)
 			}

@@ -5,7 +5,6 @@
 package targets
 
 import (
-	"context"
 	"testing"
 	"time"
 )
@@ -146,7 +145,7 @@ func TestTargetManagerConfig_Validate(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := tt.cfg.Validate(context.Background()); (err != nil) != tt.wantErr {
+			if err := tt.cfg.Validate(t.Context()); (err != nil) != tt.wantErr {
 				t.Errorf("Validate() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

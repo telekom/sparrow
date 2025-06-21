@@ -49,7 +49,7 @@ func TestCheck(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			res := c.c.check(context.Background())
+			res := c.c.check(t.Context())
 
 			if !cmp.Equal(res, c.want) {
 				diff := cmp.Diff(res, c.want)
