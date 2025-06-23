@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2025 Deutsche Telekom IT GmbH
+//
+// SPDX-License-Identifier: Apache-2.0
+
 // Package traceroute provides a traceroute implementation that
 // falls back to ICMP time-exceeded and destination-unreachable
 // messages when setting TTL limits on outgoing probes.
