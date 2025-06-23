@@ -111,7 +111,7 @@ func logHops(ctx context.Context, hops []Hop) {
 
 // wrapError wraps an error with a message and logs it.
 // It also records the error in the current OpenTelemetry span.
-func wrapError(ctx context.Context, err error, msg string, args ...any) error {
+func wrapError(ctx context.Context, err error, msg string) error {
 	if err == nil {
 		return nil
 	}
@@ -119,10 +119,10 @@ func wrapError(ctx context.Context, err error, msg string, args ...any) error {
 	span := trace.SpanFromContext(ctx)
 	caser := cases.Title(language.English)
 
-	log.ErrorContext(ctx, caser.String(msg), append([]any{"error", err}, args...)...)
-	span.SetStatus(codes.Error, fmt.Sprintf(msg+": %v", args...))
+	log.ErrorContext(ctx, caser.String(msg), "error", err)
+	span.SetStatus(codes.Error, msg)
 	span.RecordError(err)
-	return fmt.Errorf("%s: %w", fmt.Sprintf(msg, args...), err)
+	return fmt.Errorf("%s: %w", msg, err)
 }
 
 // recordTCPError records the error from dialing a TCP connection.

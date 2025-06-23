@@ -39,7 +39,7 @@ func (h *hopper) run(ctx context.Context) {
 		h.wg.Add(1)
 		go func() {
 			defer h.wg.Done()
-			ctx, hopSpan := h.otelTracer.Start(ctx, h.target.String(), trace.WithAttributes(
+			c, hopSpan := h.otelTracer.Start(ctx, h.target.String(), trace.WithAttributes(
 				attribute.Stringer("traceroute.target.address", h.target),
 				attribute.Int("traceroute.target.ttl", ttl),
 			))
@@ -53,7 +53,7 @@ func (h *hopper) run(ctx context.Context) {
 				return h.client.trace(ctx, h.target.withHopTTL(ttl), h.opts)
 			}, h.opts.Retry)
 
-			if err := retry(ctx); err != nil {
+			if err := retry(c); err != nil {
 				hopSpan.RecordError(err)
 				hopSpan.SetStatus(codes.Error, "Failed to execute hop trace")
 				hopSpan.End()
