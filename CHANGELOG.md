@@ -6,10 +6,12 @@ SPDX-License-Identifier: CC-BY-4.0
 
 # Changelog
 
-## [v0.6.0](TODOADDRELEASE) (DATE)
-⚠️ This release contains potential breaking change ⚠️
+## [v0.6.0](https://github.com/telekom/sparrow/releases/tag/v0.6.0) (DATE)
+
+⚠️ This release contains potential breaking changes ⚠️
 
 The API returns lowercase keys instead of capitalized keys. Ensure that your code handles this change to avoid issues.
 
-* [ENHANCEMENT] added Changelog file
-* [BUGFIX] DNS metric returns lowercase keys instead of capitalized keys
+* [FEATURE] added Changelog file
+* [BUGFIX] DNS endpoint `/v1/metrics/dns` returns lowercase keys instead of capitalized keys.
+* [BUGFIX] Traceroute endpoint `/v1/metrics/traceroute` returns lowercase keys instead of capitalized keys.
