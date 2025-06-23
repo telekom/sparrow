@@ -5,13 +5,25 @@
 package traceroute
 
 import (
+	"cmp"
 	"context"
 	"fmt"
+	"time"
+
+	"github.com/telekom/sparrow/internal/helper"
 )
 
-var (
-	_ Client = (*genericClient)(nil)
-)
+var _ Client = (*genericClient)(nil)
+
+// defaultOptions provides a set of default options for the traceroute.
+var defaultOptions = Options{
+	MaxTTL:  30,
+	Timeout: 60 * time.Second,
+	Retry: helper.RetryConfig{
+		Count: 3,
+		Delay: 1 * time.Second,
+	},
+}
 
 // Client is able to run a traceroute to one or more targets.
 //
@@ -27,12 +39,14 @@ type genericClient struct {
 	tcp Client
 }
 
+// NewClient creates a new [Client] that can be used to run traceroutes.
 func NewClient() Client {
 	return &genericClient{
 		tcp: newTCPClient(),
 	}
 }
 
+// Run executes the traceroute for the given targets with the specified options.
 func (c *genericClient) Run(ctx context.Context, targets []Target, opts *Options) (Result, error) {
 	for _, target := range targets {
 		if err := target.Validate(); err != nil {
@@ -40,5 +54,5 @@ func (c *genericClient) Run(ctx context.Context, targets []Target, opts *Options
 		}
 	}
 
-	return c.tcp.Run(ctx, targets, opts)
+	return c.tcp.Run(ctx, targets, cmp.Or(opts, &defaultOptions))
 }

@@ -116,7 +116,7 @@ func (c *tcpClient) trace(ctx context.Context, target Target, opts Options) erro
 		return rErr
 	}
 
-	packet, err := il.Read(ctx, target.Port, opts.Timeout)
+	packet, err := il.Read(ctx, conn.port, opts.Timeout)
 	switch {
 	// Unexpected error: we failed to read an ICMP message
 	// and it's not because of capabilities/exceeded timeout.
@@ -156,7 +156,7 @@ func (c *tcpClient) trace(ctx context.Context, target Target, opts Options) erro
 			Addr:    newHopAddress(packet.remoteAddr),
 			Name:    resolveName(packet.remoteAddr),
 			TTL:     target.hopTTL,
-			Reached: false,
+			Reached: packet.reached,
 		}
 		log.DebugContext(ctx, "Received ICMP message", "port", packet.port, "routerAddr", packet.remoteAddr)
 		span.AddEvent("ICMP message received", trace.WithAttributes(

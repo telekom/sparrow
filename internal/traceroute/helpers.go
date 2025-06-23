@@ -72,21 +72,25 @@ func collectResults(ch <-chan Hop) []Hop {
 		}
 		hops = append(hops, hop)
 	}
-	slices.SortFunc(hops, func(a, b Hop) int {
-		return a.TTL - b.TTL
-	})
 
 	if len(hops) == 0 {
 		return hops
 	}
 
-	// Filter out duplicates (keep the first occurrence of each TTL)
-	filtered := make([]Hop, 0, len(hops))
-	filtered = append(filtered, hops[0])
+	slices.SortFunc(hops, func(a, b Hop) int {
+		return a.TTL - b.TTL
+	})
 
-	for i := 1; i < len(hops); i++ {
-		if hops[i].TTL != hops[i-1].TTL {
-			filtered = append(filtered, hops[i])
+	filtered := make([]Hop, 0, len(hops))
+	seen := make(map[int]bool)
+	for _, hop := range hops {
+		if !seen[hop.TTL] {
+			filtered = append(filtered, hop)
+			seen[hop.TTL] = true
+			if hop.Reached {
+				// If we reached the target, we can stop collecting hops.
+				break
+			}
 		}
 	}
 

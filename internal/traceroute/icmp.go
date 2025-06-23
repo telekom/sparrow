@@ -52,24 +52,24 @@ func newICMPListener() (icmpListener, error) {
 //
 // Returns [errICMPNotAvailable] if the listener was created without NET_RAW capabilities,
 // meaning ICMP is not available for reading.
-func (il *icmpPacketListener) Read(ctx context.Context, wantPort int, timeout time.Duration) (icmpPacket, error) {
+func (il *icmpPacketListener) Read(ctx context.Context, recvPort int, timeout time.Duration) (icmpPacket, error) {
 	if !il.canICMP {
 		return icmpPacket{}, errICMPNotAvailable
 	}
 	log := logger.FromContext(ctx)
 	deadline := time.Now().Add(timeout)
 
-	for time.Now().Unix() < deadline.Unix() {
+	for time.Now().Before(deadline) {
 		log.DebugContext(ctx, "Reading ICMP message")
 		packet, err := il.recvPacket(ctx, timeout)
 		if err != nil {
-			log.DebugContext(ctx, "Failed to receive ICMP packet", "error", err)
+			log.ErrorContext(ctx, "Failed to receive ICMP packet", "error", err)
 			continue
 		}
 
-		if packet.port != wantPort {
+		if packet.port != recvPort {
 			log.DebugContext(ctx, "Received ICMP message on another port, ignoring",
-				"expectedPort", wantPort,
+				"expectedPort", recvPort,
 				"receivedPort", packet.port)
 			continue
 		}
@@ -107,8 +107,11 @@ func (il *icmpPacketListener) recvPacket(ctx context.Context, timeout time.Durat
 		return nil, fmt.Errorf("failed to create ICMP packet from received message: %w", err)
 	}
 	log.DebugContext(ctx, "Received ICMP packet",
+		"type", msg.Type,
 		"routerAddr", packet.remoteAddr,
-		"port", packet.port)
+		"port", packet.port,
+		"reached", packet.reached,
+	)
 	return packet, nil
 }
 
@@ -120,7 +123,16 @@ type icmpPacket struct {
 	// port is the parsed destination port from the TCP segment
 	// contained in the ICMP message.
 	port int
+	// reached indicates whether the ICMP message indicates that the destination
+	// was reached or not. This is true for ICMP messages of [ipv4.ICMPTypeDestinationUnreachable]
+	// and [ipv6.ICMPTypeDestinationUnreachable].
+	reached bool
 }
+
+// codePortUnreachable is the ICMP code for Destination Unreachable - "Port Unreachable" messages.
+// For more information, see:
+// https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml#icmp-parameters-codes-3
+const codePortUnreachable = 3
 
 // newICMPPacket creates a new ICMP packet from the given ICMP message and source address.
 func newICMPPacket(src net.Addr, msg *icmp.Message) (*icmpPacket, error) {
@@ -130,9 +142,13 @@ func newICMPPacket(src net.Addr, msg *icmp.Message) (*icmpPacket, error) {
 	switch msg.Type {
 	case ipv4.ICMPTypeTimeExceeded:
 		tcpSegment = msg.Body.(*icmp.TimeExceeded).Data[ipv4.HeaderLen:]
+	case ipv4.ICMPTypeDestinationUnreachable:
+		tcpSegment = msg.Body.(*icmp.DstUnreach).Data[ipv4.HeaderLen:]
+	// Currently, we do not support IPv6 ICMP messages.
+	// If we ever do, the header size is [ipv6.HeaderLen].
 	case ipv6.ICMPTypeTimeExceeded:
-		// Currently, we do not support IPv6 ICMP messages.
-		// If we ever do, the header size is [ipv6.HeaderLen].
+		return nil, fmt.Errorf("ipv6 ICMP messages are not supported")
+	case ipv6.ICMPTypeDestinationUnreachable:
 		return nil, fmt.Errorf("ipv6 ICMP messages are not supported")
 	default:
 		return nil, fmt.Errorf("unexpected ICMP message type: %v", msg.Type)
@@ -144,7 +160,13 @@ func newICMPPacket(src net.Addr, msg *icmp.Message) (*icmpPacket, error) {
 	}
 
 	destPort := int(tcpSegment[0])<<8 + int(tcpSegment[1])
-	return &icmpPacket{remoteAddr: src, port: destPort}, nil
+	unreachable := msg.Type == ipv4.ICMPTypeDestinationUnreachable || msg.Type == ipv6.ICMPTypeDestinationUnreachable
+
+	return &icmpPacket{
+		remoteAddr: src,
+		port:       destPort,
+		reached:    unreachable && msg.Code == codePortUnreachable,
+	}, nil
 }
 
 // Close closes the ICMP listener connection.

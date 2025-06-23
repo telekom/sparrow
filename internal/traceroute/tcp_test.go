@@ -115,14 +115,15 @@ func TestTCPClient_Run(t *testing.T) {
 		dialTCP: func(_ context.Context, addr net.Addr, ttl int, timeout time.Duration) (tcpConn, error) {
 			if ttl == 1 {
 				t.Logf("Dialing %s with TTL %d and timeout %s", addr, ttl, timeout)
-				return tcpConn{conn: nil, port: 0}, nil
+				return tcpConn{conn: nil, port: 30000}, nil
 			}
 			t.Logf("Simulating unreachable host for %s with TTL %d", addr, ttl)
-			return tcpConn{}, syscall.EHOSTUNREACH
+			return tcpConn{port: 30000}, syscall.EHOSTUNREACH
 		},
 		newICMPListener: func() (icmpListener, error) {
 			return &icmpListenerMock{
-				ReadFunc: func(_ context.Context, _ int, _ time.Duration) (icmpPacket, error) {
+				ReadFunc: func(_ context.Context, port int, _ time.Duration) (icmpPacket, error) {
+					assert.Equal(t, 30000, port, "Expected ICMP read on port 30000")
 					t.Log("Simulating ICMP read timeout")
 					return icmpPacket{}, context.DeadlineExceeded
 				},

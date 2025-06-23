@@ -5,6 +5,7 @@
 package traceroute
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net"
@@ -43,27 +44,27 @@ func (p Protocol) IsValid() bool {
 
 // Options contains the optional configuration for the traceroute.
 type Options struct {
-	// MaxTTL is the maximum TTL to use for the traceroute.
-	MaxTTL int `json:"max_ttl" yaml:"max_ttl"`
-	// Timeout is the timeout for each hop in the traceroute.
-	Timeout time.Duration `json:"timeout" yaml:"timeout"`
 	// Retry is the retry configuration for the traceroute.
-	Retry helper.RetryConfig `json:"retry" yaml:"retry"`
+	Retry helper.RetryConfig `json:"retry" yaml:"retry" mapstructure:"retry"`
+	// MaxTTL is the maximum TTL to use for the traceroute.
+	MaxTTL int `json:"maxHops" yaml:"maxHops" mapstructure:"maxHops"`
+	// Timeout is the timeout for each hop in the traceroute.
+	Timeout time.Duration `json:"timeout" yaml:"timeout" mapstructure:"timeout"`
 }
 
 // Target represents a target for the traceroute.
 type Target struct {
 	// Protocol is the protocol to use for the traceroute.
-	Protocol Protocol `json:"protocol" yaml:"protocol"`
+	Protocol Protocol `json:"protocol" yaml:"protocol" mapstructure:"protocol"`
 	// Address is the target address to trace to.
-	Address string `json:"address" yaml:"address"`
+	Address string `json:"address" yaml:"address" mapstructure:"address"`
 	// Port is the port to use for the traceroute.
-	Port int `json:"port" yaml:"port"`
+	Port int `json:"port" yaml:"port" mapstructure:"port"`
 
 	// hopTTL is the TTL to start the traceroute with.
-	hopTTL int `json:"-" yaml:"-"`
+	hopTTL int
 	// hopChan is the channel to send hops to.
-	hopChan chan<- Hop `json:"-" yaml:"-"`
+	hopChan chan<- Hop
 }
 
 // withHopTTL returns a new Target with the specified hop TTL.
@@ -107,11 +108,22 @@ func (t Target) ToAddr() (net.Addr, error) {
 }
 
 type Hop struct {
-	Latency time.Duration `json:"latency" yaml:"latency"`
+	Latency time.Duration `json:"-" yaml:"-"`
 	Addr    HopAddress    `json:"addr" yaml:"addr"`
 	Name    string        `json:"name" yaml:"name"`
 	TTL     int           `json:"ttl" yaml:"ttl"`
 	Reached bool          `json:"reached" yaml:"reached"`
+}
+
+func (h Hop) MarshalJSON() ([]byte, error) {
+	type alias Hop
+	return json.Marshal(&struct {
+		Latency string `json:"latency"`
+		alias
+	}{
+		Latency: h.Latency.String(),
+		alias:   alias(h),
+	})
 }
 
 func (h Hop) String() string {
@@ -132,7 +144,7 @@ func (h Hop) String() string {
 
 type HopAddress struct {
 	IP   string `json:"ip" yaml:"ip"`
-	Port int    `json:"port" yaml:"port"`
+	Port int    `json:"port,omitempty" yaml:"port,omitempty"`
 }
 
 func newHopAddress(addr net.Addr) HopAddress {
