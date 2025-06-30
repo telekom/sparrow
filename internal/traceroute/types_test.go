@@ -7,10 +7,12 @@ package traceroute
 import (
 	"net"
 	"reflect"
+	"strconv"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestHopAddress_String(t *testing.T) {
@@ -226,7 +228,9 @@ func newTestAddress(t testing.TB, s string) HopAddress {
 	}
 
 	if port != "" {
-		return HopAddress{IP: ip, Port: 0}
+		p, err := strconv.Atoi(port)
+		require.NoError(t, err, "Failed to parse port from address %s", s)
+		return HopAddress{IP: ip, Port: p}
 	}
 
 	return HopAddress{IP: ip, Port: 0}
