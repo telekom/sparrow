@@ -6,7 +6,6 @@ package traceroute
 import (
 	"context"
 	"sync"
-	"time"
 )
 
 // Ensure, that icmpListenerMock does implement icmpListener.
@@ -22,7 +21,7 @@ var _ icmpListener = &icmpListenerMock{}
 //			CloseFunc: func() error {
 //				panic("mock out the Close method")
 //			},
-//			ReadFunc: func(ctx context.Context, wantPort int, timeout time.Duration) (icmpPacket, error) {
+//			ReadFunc: func(ctx context.Context) (icmpPacket, error) {
 //				panic("mock out the Read method")
 //			},
 //		}
@@ -36,7 +35,7 @@ type icmpListenerMock struct {
 	CloseFunc func() error
 
 	// ReadFunc mocks the Read method.
-	ReadFunc func(ctx context.Context, wantPort int, timeout time.Duration) (icmpPacket, error)
+	ReadFunc func(ctx context.Context) (icmpPacket, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -47,10 +46,6 @@ type icmpListenerMock struct {
 		Read []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
-			// WantPort is the wantPort argument value.
-			WantPort int
-			// Timeout is the timeout argument value.
-			Timeout time.Duration
 		}
 	}
 	lockClose sync.RWMutex
@@ -85,23 +80,19 @@ func (mock *icmpListenerMock) CloseCalls() []struct {
 }
 
 // Read calls ReadFunc.
-func (mock *icmpListenerMock) Read(ctx context.Context, wantPort int, timeout time.Duration) (icmpPacket, error) {
+func (mock *icmpListenerMock) Read(ctx context.Context) (icmpPacket, error) {
 	if mock.ReadFunc == nil {
 		panic("icmpListenerMock.ReadFunc: method is nil but icmpListener.Read was just called")
 	}
 	callInfo := struct {
-		Ctx      context.Context
-		WantPort int
-		Timeout  time.Duration
+		Ctx context.Context
 	}{
-		Ctx:      ctx,
-		WantPort: wantPort,
-		Timeout:  timeout,
+		Ctx: ctx,
 	}
 	mock.lockRead.Lock()
 	mock.calls.Read = append(mock.calls.Read, callInfo)
 	mock.lockRead.Unlock()
-	return mock.ReadFunc(ctx, wantPort, timeout)
+	return mock.ReadFunc(ctx)
 }
 
 // ReadCalls gets all the calls that were made to Read.
@@ -109,14 +100,10 @@ func (mock *icmpListenerMock) Read(ctx context.Context, wantPort int, timeout ti
 //
 //	len(mockedicmpListener.ReadCalls())
 func (mock *icmpListenerMock) ReadCalls() []struct {
-	Ctx      context.Context
-	WantPort int
-	Timeout  time.Duration
+	Ctx context.Context
 } {
 	var calls []struct {
-		Ctx      context.Context
-		WantPort int
-		Timeout  time.Duration
+		Ctx context.Context
 	}
 	mock.lockRead.RLock()
 	calls = mock.calls.Read

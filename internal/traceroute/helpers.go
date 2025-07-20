@@ -26,6 +26,8 @@ const (
 	basePort = 30000
 	// portRange is the range of ports to generate a random port from
 	portRange = 10000
+	// mtuSize is the maximum transmission unit size
+	mtuSize = 1500
 )
 
 // randomPort returns a random port in the interval [30000, 40000)
@@ -61,6 +63,22 @@ func ipFromAddr(addr net.Addr) net.IP {
 		return a.IP
 	case *net.IPAddr:
 		return a.IP
+	}
+	return nil
+}
+
+// addrFromSocket converts a [unix.Sockaddr] to a [net.Addr].
+func addrFromSocket(s unix.Sockaddr) net.Addr {
+	switch sa := s.(type) {
+	case *unix.SockaddrInet4:
+		ip := net.IPv4(sa.Addr[0], sa.Addr[1], sa.Addr[2], sa.Addr[3])
+		return &net.IPAddr{IP: ip}
+	case *unix.SockaddrInet6:
+		ip := net.IP(sa.Addr[:])
+		// TODO: Handle ZoneId for IPv6 addresses
+		return &net.IPAddr{IP: ip}
+	case *unix.SockaddrUnix:
+		return &net.UnixAddr{Name: sa.Name, Net: "unix"}
 	}
 	return nil
 }

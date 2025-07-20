@@ -26,11 +26,12 @@ type Protocol string
 // Protocol constants for the traceroute.
 const (
 	ProtocolTCP Protocol = "tcp"
+	ProtocolUDP Protocol = "udp"
 )
 
 func (p Protocol) String() string {
 	switch p {
-	case ProtocolTCP:
+	case ProtocolTCP, ProtocolUDP:
 		return string(p)
 	default:
 		return "unknown"
@@ -38,7 +39,7 @@ func (p Protocol) String() string {
 }
 
 func (p Protocol) IsValid() bool {
-	valid := []Protocol{ProtocolTCP}
+	valid := []Protocol{ProtocolTCP, ProtocolUDP}
 	return slices.Contains(valid, p)
 }
 
@@ -102,6 +103,8 @@ func (t Target) ToAddr() (net.Addr, error) {
 	switch t.Protocol {
 	case ProtocolTCP:
 		return net.ResolveTCPAddr("tcp", t.String())
+	case ProtocolUDP:
+		return net.ResolveUDPAddr("udp", t.String())
 	default:
 		return nil, net.InvalidAddrError("invalid target protocol")
 	}
@@ -165,4 +168,25 @@ func (a HopAddress) String() string {
 		return fmt.Sprintf("%s:%d", a.IP, a.Port)
 	}
 	return a.IP
+}
+
+// netConn represents an network connection with a specific port.
+type netConn struct {
+	net.Conn
+	port int
+}
+
+func (nc *netConn) ReadFrom(b []byte) (int, net.Addr, error) {
+	if c, ok := nc.Conn.(*net.UDPConn); ok {
+		return c.ReadFrom(b)
+	}
+	return 0, nil, fmt.Errorf("ReadFrom not supported for %T connections", nc.Conn)
+}
+
+// Close closes the network connection.
+func (tc *netConn) Close() error {
+	if tc.Conn != nil {
+		return tc.Conn.Close()
+	}
+	return nil
 }

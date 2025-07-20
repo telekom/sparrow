@@ -76,16 +76,16 @@ func TestTCPClient_trace(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			client := &tcpClient{
-				dialTCP: func(_ context.Context, addr net.Addr, _ int, _ time.Duration) (tcpConn, error) {
+				dialTCP: func(_ context.Context, addr net.Addr, _ int, _ time.Duration) (netConn, error) {
 					require.Contains(t, addr.String(), ":8080")
 					if tt.dialErr != nil {
-						return tcpConn{}, tt.dialErr
+						return netConn{}, tt.dialErr
 					}
-					return tcpConn{conn: nil, port: 0}, nil
+					return netConn{Conn: nil, port: 0}, nil
 				},
-				newICMPListener: func() (icmpListener, error) {
+				newICMPListener: func(_ int) (icmpListener, error) {
 					return &icmpListenerMock{
-						ReadFunc: func(_ context.Context, _ int, _ time.Duration) (icmpPacket, error) {
+						ReadFunc: func(_ context.Context) (icmpPacket, error) {
 							return tt.icmpPacket, tt.icmpErr
 						},
 						CloseFunc: func() error { return nil },
@@ -116,17 +116,17 @@ func TestTCPClient_trace(t *testing.T) {
 
 func TestTCPClient_Run(t *testing.T) {
 	client := &tcpClient{
-		dialTCP: func(_ context.Context, addr net.Addr, ttl int, timeout time.Duration) (tcpConn, error) {
+		dialTCP: func(_ context.Context, addr net.Addr, ttl int, timeout time.Duration) (netConn, error) {
 			if ttl == 1 {
 				t.Logf("Dialing %s with TTL %d and timeout %s", addr, ttl, timeout)
-				return tcpConn{conn: nil, port: 30000}, nil
+				return netConn{Conn: nil, port: 30000}, nil
 			}
 			t.Logf("Simulating unreachable host for %s with TTL %d", addr, ttl)
-			return tcpConn{port: 30000}, syscall.EHOSTUNREACH
+			return netConn{port: 30000}, syscall.EHOSTUNREACH
 		},
-		newICMPListener: func() (icmpListener, error) {
+		newICMPListener: func(port int) (icmpListener, error) {
 			return &icmpListenerMock{
-				ReadFunc: func(_ context.Context, port int, _ time.Duration) (icmpPacket, error) {
+				ReadFunc: func(_ context.Context) (icmpPacket, error) {
 					assert.Equal(t, 30000, port, "Expected ICMP read on port 30000")
 					t.Log("Simulating ICMP read timeout")
 					return icmpPacket{}, context.DeadlineExceeded

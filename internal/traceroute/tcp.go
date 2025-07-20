@@ -23,15 +23,15 @@ var (
 )
 
 type tcpClient struct {
-	dialTCP         func(ctx context.Context, addr net.Addr, ttl int, timeout time.Duration) (tcpConn, error)
-	newICMPListener func() (icmpListener, error)
+	dialTCP         func(ctx context.Context, addr net.Addr, ttl int, timeout time.Duration) (netConn, error)
+	newICMPListener func(wantPort int) (icmpListener, error)
 }
 
 // newTCPClient creates a new TCP client for performing traceroutes.
 func newTCPClient() *tcpClient {
 	return &tcpClient{
 		dialTCP:         dialTCP,
-		newICMPListener: newICMPListener,
+		newICMPListener: newRawListener,
 	}
 }
 
@@ -81,12 +81,6 @@ func (c *tcpClient) trace(ctx context.Context, target Target, opts Options) erro
 		return wrapError(ctx, err, "failed to convert target to address")
 	}
 
-	il, err := c.newICMPListener()
-	if err != nil {
-		return wrapError(ctx, err, "failed to create ICMP listener")
-	}
-	defer func() { _ = il.Close() }()
-
 	start := time.Now()
 	conn, err := c.dialTCP(ctx, targetAddr, target.hopTTL, opts.Timeout)
 	defer func() { _ = conn.Close() }()
@@ -120,13 +114,18 @@ func (c *tcpClient) trace(ctx context.Context, target Target, opts Options) erro
 		return rErr
 	}
 
-	packet, err := il.Read(ctx, conn.port, opts.Timeout)
-	switch {
-	// Unexpected error: we failed to read an ICMP message
-	// and it's not because of capabilities/exceeded timeout.
-	case err != nil && !isTracerouteError(err):
-		return wrapError(ctx, err, "failed to read ICMP message")
+	il, err := c.newICMPListener(conn.port)
+	if err != nil {
+		return wrapError(ctx, err, "failed to create ICMP listener")
+	}
+	defer func() { _ = il.Close() }()
 
+	ctx, cancel := context.WithDeadline(ctx, time.Now().Add(opts.Timeout))
+	defer cancel()
+	packet, err := il.Read(ctx)
+	// Order matters: First check for expected errors,
+	// then handle unexpected errors.
+	switch {
 	// User error: we don't have the necessary capabilities
 	// to open a raw socket for reading ICMP messages.
 	case errors.Is(err, errICMPNotAvailable):
@@ -151,6 +150,11 @@ func (c *tcpClient) trace(ctx context.Context, target Target, opts Options) erro
 		target.hopChan <- hop
 		return nil
 
+	// Unexpected error: we failed to read an ICMP message
+	// and it's not because of the reasons above.
+	case err != nil:
+		return wrapError(ctx, err, "failed to read ICMP message")
+
 	// Expected ICMP message received: we received an ICMP message
 	// indicating that the TTL has expired, which is the expected behavior
 	// of traceroute.
@@ -172,15 +176,8 @@ func (c *tcpClient) trace(ctx context.Context, target Target, opts Options) erro
 	}
 }
 
-// tcpConn represents a TCP connection with a specific port.
-type tcpConn struct {
-	conn net.Conn
-	port int
-}
-
 // dialTCP dials a TCP connection to the given address with the specified TTL.
-func dialTCP(ctx context.Context, addr net.Addr, ttl int, timeout time.Duration) (tcpConn, error) {
-	log := logger.FromContext(ctx)
+func dialTCP(ctx context.Context, addr net.Addr, ttl int, timeout time.Duration) (netConn, error) {
 	port := randomPort()
 
 	// Dialer with control function to set IP_TTL
@@ -201,23 +198,9 @@ func dialTCP(ctx context.Context, addr net.Addr, ttl int, timeout time.Duration)
 	}
 
 	conn, err := dialer.DialContext(ctx, "tcp", addr.String())
-	switch {
-	case err == nil:
-		return tcpConn{conn: conn, port: port}, nil
-	case errors.Is(err, unix.EADDRINUSE):
-		// If the address is already in use,
-		// we just retry with a new random port.
-		log.WarnContext(ctx, "Failed to dial TCP connection: address in use", "error", err)
+	if errors.Is(err, unix.EADDRINUSE) {
 		return dialTCP(ctx, addr, ttl, timeout)
-	default:
-		return tcpConn{conn: conn, port: port}, err
 	}
-}
-
-// Close closes the TCP connection.
-func (tc *tcpConn) Close() error {
-	if tc.conn != nil {
-		return tc.conn.Close()
-	}
-	return nil
+	// No need to check for errors here, the caller takes care of that.
+	return netConn{Conn: conn, port: port}, err
 }
