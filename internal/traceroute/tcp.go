@@ -120,7 +120,7 @@ func (c *tcpClient) trace(ctx context.Context, target Target, opts Options) erro
 	}
 	defer func() { _ = il.Close() }()
 
-	ctx, cancel := context.WithDeadline(ctx, time.Now().Add(opts.Timeout))
+	ctx, cancel := context.WithDeadline(ctx, start.Add(opts.Timeout))
 	defer cancel()
 	packet, err := il.Read(ctx)
 	// Order matters: First check for expected errors,
@@ -178,6 +178,7 @@ func (c *tcpClient) trace(ctx context.Context, target Target, opts Options) erro
 
 // dialTCP dials a TCP connection to the given address with the specified TTL.
 func dialTCP(ctx context.Context, addr net.Addr, ttl int, timeout time.Duration) (netConn, error) {
+	log := logger.FromContext(ctx)
 	port := randomPort()
 
 	// Dialer with control function to set IP_TTL
@@ -199,6 +200,7 @@ func dialTCP(ctx context.Context, addr net.Addr, ttl int, timeout time.Duration)
 
 	conn, err := dialer.DialContext(ctx, "tcp", addr.String())
 	if errors.Is(err, unix.EADDRINUSE) {
+		log.WarnContext(ctx, "Failed to dial TCP connection: address in use", "error", err)
 		return dialTCP(ctx, addr, ttl, timeout)
 	}
 	// No need to check for errors here, the caller takes care of that.
