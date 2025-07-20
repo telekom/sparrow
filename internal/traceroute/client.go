@@ -51,7 +51,6 @@ func NewClient() Client {
 }
 
 // Run executes the traceroute for the given targets with the specified options.
-// Run executes the traceroute for the given targets with the specified options.
 func (c *genericClient) Run(ctx context.Context, targets []Target, opts *Options) (Result, error) {
 	opts = cmp.Or(opts, &defaultOptions)
 	groups, err := groupTargets(targets)

@@ -88,14 +88,13 @@ func (c *udpClient) trace(ctx context.Context, target Target, opts Options) erro
 
 	listener, err := newErrQueueListener(nc.Conn, nc.port)
 	if err != nil {
-		nc.Close()
-		return wrapError(ctx, err, "creating errQueueListener failed")
+		return wrapError(ctx, err, "failed creating errQueueListener")
 	}
 	defer func() { _ = listener.Close() }()
 
 	// We need to send a single byte to trigger the ICMP error response.
 	if _, werr := nc.Write([]byte{0}); werr != nil {
-		return wrapError(ctx, werr, "sending UDP probe failed")
+		return wrapError(ctx, werr, "failed sending UDP probe")
 	}
 
 	ctx, cancel := context.WithDeadline(ctx, time.Now().Add(opts.Timeout))
