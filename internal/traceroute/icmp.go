@@ -73,8 +73,10 @@ func (il *icmpPacketListener) Read(ctx context.Context, recvPort int, timeout ti
 
 		if packet.port != recvPort {
 			log.DebugContext(ctx, "Received ICMP message on another port, ignoring",
-				"expectedPort", recvPort,
-				"receivedPort", packet.port)
+				"local", fmt.Sprintf("0.0.0.0:%d", recvPort),
+				"remote", packet.remoteAddr.String(),
+				"receivedOn", packet.port,
+			)
 			continue
 		}
 

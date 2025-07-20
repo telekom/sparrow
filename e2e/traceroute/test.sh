@@ -6,8 +6,7 @@
 
 EXIT_CODE=0
 
-function cleanup()
-{
+function cleanup() {
     kathara lclean
     yes | rm ./shared/api.json ./shared/prometheus.txt ./shared/sparrow
     exit $EXIT_CODE
@@ -27,26 +26,26 @@ function success() {
 }
 
 function check_prometheus_output() {
-  if grep -q 'sparrow_traceroute_minimum_hops{target="200.1.1.7"} 3' ./shared/prometheus.txt; then
-    success "The specific Prometheus output is present."
-  else
-    error "The specific Prometheus output is not present."
-  fi
+    if grep -q 'sparrow_traceroute_minimum_hops{target="200.1.1.7"} 3' ./shared/prometheus.txt; then
+        success "The specific Prometheus output is present."
+    else
+        error "The specific Prometheus output is not present."
+    fi
 }
 
 function check_api_output() {
     if jq -e '
-        .data["200.1.1.7"].hops | 
-        .["1"][0].addr.ip == "195.11.14.1" and 
-        .["1"][0].reached == false and
-        .["1"][0].ttl == 1 and
-        .["2"][0].addr.ip == "100.0.0.10" and 
-        .["2"][0].reached == false and
-        .["2"][0].ttl == 2 and
-        .["3"][0].addr.ip == "200.1.1.7" and 
-        .["3"][0].reached == true and
-        .["3"][0].ttl == 3 and
-        .["3"][0].addr.port == 80' ./shared/api.json > /dev/null; then
+        .data["200.1.1.7:80"] | 
+        .[0].addr.ip == "195.11.14.1" and 
+        .[0].reached == false and
+        .[0].ttl == 1 and
+        .[1].addr.ip == "100.0.0.10" and 
+        .[1].reached == false and
+        .[1].ttl == 2 and
+        .[2].addr.ip == "200.1.1.7" and 
+        .[2].reached == true and
+        .[2].ttl == 3 and
+        .[2].addr.port == 80' ./shared/api.json >/dev/null; then
         success "The API output matches the expected hops and conditions."
     else
         error "The API output does not match the expected hops and conditions."
@@ -58,7 +57,6 @@ trap cleanup EXIT
 
 # Start the Kathará lab
 kathara lstart
-
 
 # Copy the binary into the shared folder
 info "Using $SPARROW_BIN"

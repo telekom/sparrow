@@ -180,6 +180,7 @@ type tcpConn struct {
 
 // dialTCP dials a TCP connection to the given address with the specified TTL.
 func dialTCP(ctx context.Context, addr net.Addr, ttl int, timeout time.Duration) (tcpConn, error) {
+	log := logger.FromContext(ctx)
 	port := randomPort()
 
 	// Dialer with control function to set IP_TTL
@@ -206,6 +207,7 @@ func dialTCP(ctx context.Context, addr net.Addr, ttl int, timeout time.Duration)
 	case errors.Is(err, unix.EADDRINUSE):
 		// If the address is already in use,
 		// we just retry with a new random port.
+		log.WarnContext(ctx, "Failed to dial TCP connection: address in use", "error", err)
 		return dialTCP(ctx, addr, ttl, timeout)
 	default:
 		return tcpConn{conn: conn, port: port}, err

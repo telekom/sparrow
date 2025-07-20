@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/telekom/sparrow/internal/helper"
+	"github.com/telekom/sparrow/internal/logger"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
@@ -37,7 +38,7 @@ type hopper struct {
 func (h *hopper) run(ctx context.Context) {
 	for ttl := 1; ttl <= h.opts.MaxTTL; ttl++ {
 		h.wg.Add(1)
-		go func() {
+		go func(ttl int) {
 			defer h.wg.Done()
 			c, hopSpan := h.otelTracer.Start(ctx, h.target.String(), trace.WithAttributes(
 				attribute.Stringer("traceroute.target.address", h.target),
@@ -50,6 +51,7 @@ func (h *hopper) run(ctx context.Context) {
 			)
 
 			retry := helper.Retry(func(ctx context.Context) error {
+				ctx = logger.IntoContext(ctx, logger.FromContext(ctx).With("ttl", ttl))
 				return h.client.trace(ctx, h.target.withHopTTL(ttl), h.opts)
 			}, h.opts.Retry)
 
@@ -59,6 +61,6 @@ func (h *hopper) run(ctx context.Context) {
 				hopSpan.End()
 				return
 			}
-		}()
+		}(ttl)
 	}
 }

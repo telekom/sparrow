@@ -33,7 +33,7 @@ func (c *Config) Validate() error {
 		return checks.ErrInvalidConfig{CheckName: CheckName, Field: "traceroute.interval", Reason: "must be greater than 0"}
 	}
 
-	if c.Options.Timeout <= 0 {
+	if c.Timeout <= 0 {
 		return checks.ErrInvalidConfig{CheckName: CheckName, Field: "traceroute.timeout", Reason: "must be greater than 0"}
 	}
 
