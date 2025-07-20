@@ -6,18 +6,16 @@ package traceroute
 
 import (
 	"context"
-	"fmt"
 	"slices"
 	"sync"
 	"time"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/telekom/sparrow/internal/helper"
 	"github.com/telekom/sparrow/internal/logger"
+	"github.com/telekom/sparrow/internal/traceroute"
 	"github.com/telekom/sparrow/pkg/checks"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -26,26 +24,15 @@ var _ checks.Check = (*Traceroute)(nil)
 
 const CheckName = "traceroute"
 
-type Target struct {
-	// The address of the target to traceroute to. Can be a DNS name or an IP address
-	Addr string `json:"addr" yaml:"addr" mapstructure:"addr"`
-	// The port to traceroute to
-	Port int `json:"port" yaml:"port" mapstructure:"port"`
-}
-
-func (t Target) String() string {
-	return fmt.Sprintf("%s:%d", t.Addr, t.Port)
-}
-
 func NewCheck() checks.Check {
 	c := &Traceroute{
 		CheckBase: checks.CheckBase{
 			Mu:       sync.Mutex{},
 			DoneChan: make(chan struct{}, 1),
 		},
-		config:     Config{},
-		traceroute: TraceRoute,
-		metrics:    newMetrics(),
+		config:  Config{},
+		client:  traceroute.NewClient(),
+		metrics: newMetrics(),
 	}
 	c.tracer = otel.Tracer(c.Name())
 	return c
@@ -53,28 +40,13 @@ func NewCheck() checks.Check {
 
 type Traceroute struct {
 	checks.CheckBase
-	config     Config
-	traceroute tracerouteFactory
-	metrics    metrics
-	tracer     trace.Tracer
+	config  Config
+	metrics metrics
+	client  traceroute.Client
+	tracer  trace.Tracer
 }
 
-type tracerouteConfig struct {
-	Dest    string
-	Port    int
-	Timeout time.Duration
-	MaxHops int
-	Rc      helper.RetryConfig
-}
-
-type tracerouteFactory func(ctx context.Context, cfg tracerouteConfig) (map[int][]Hop, error)
-
-type result struct {
-	// The minimum number of hops required to reach the target
-	MinHops int `json:"min_hops" yaml:"min_hops" mapstructure:"min_hops"`
-	// The path taken to the destination
-	Hops map[int][]Hop `json:"hops" yaml:"hops" mapstructure:"hops"`
-}
+type result map[string][]traceroute.Hop
 
 // Run runs the check in a loop sending results to the provided channel
 func (tr *Traceroute) Run(ctx context.Context, cResult chan checks.ResultDTO) error {
@@ -112,90 +84,28 @@ func (tr *Traceroute) GetConfig() checks.Runtime {
 	return &tr.config
 }
 
-func (tr *Traceroute) check(ctx context.Context) map[string]result {
-	res := make(map[string]result)
+func (tr *Traceroute) check(ctx context.Context) result {
 	log := logger.FromContext(ctx)
+	ctx, span := tr.tracer.Start(ctx, "traceroute.check")
+	defer span.End()
 
-	type internalResult struct {
-		addr string
-		res  result
+	tr.Mu.Lock()
+	defer tr.Mu.Unlock()
+
+	if len(tr.config.Targets) == 0 {
+		log.WarnContext(ctx, "No targets configured for traceroute check")
+		return result{}
 	}
 
-	cResult := make(chan internalResult, len(tr.config.Targets))
-	var wg sync.WaitGroup
-	start := time.Now()
-	wg.Add(len(tr.config.Targets))
-
-	for _, t := range tr.config.Targets {
-		go func(t Target) {
-			defer wg.Done()
-			l := log.With("target", t.String())
-			l.DebugContext(ctx, "Running traceroute")
-
-			c, span := tr.tracer.Start(ctx, t.String(), trace.WithAttributes(
-				attribute.String("target.addr", t.Addr),
-				attribute.Int("target.port", t.Port),
-				attribute.Stringer("config.interval", tr.config.Interval),
-				attribute.Stringer("config.timeout", tr.config.Timeout),
-				attribute.Int("config.max_hops", tr.config.MaxHops),
-				attribute.Int("config.retry.count", tr.config.Retry.Count),
-				attribute.Stringer("config.retry.delay", tr.config.Retry.Delay),
-			))
-			defer span.End()
-
-			s := time.Now()
-			hops, err := tr.traceroute(c, tracerouteConfig{
-				Dest:    t.Addr,
-				Port:    t.Port,
-				Timeout: tr.config.Timeout,
-				MaxHops: tr.config.MaxHops,
-				Rc:      tr.config.Retry,
-			})
-			elapsed := time.Since(s)
-
-			if err != nil {
-				l.ErrorContext(ctx, "Error running traceroute", "error", err)
-				span.RecordError(err)
-				span.SetStatus(codes.Error, err.Error())
-			} else {
-				span.SetStatus(codes.Ok, "success")
-			}
-
-			tr.metrics.CheckDuration(t.Addr, elapsed)
-			l.DebugContext(ctx, "Ran traceroute", "result", hops, "duration", elapsed)
-
-			res := result{
-				Hops:    hops,
-				MinHops: tr.config.MaxHops,
-			}
-			for ttl, hop := range hops {
-				for _, attempt := range hop {
-					if attempt.Reached && attempt.Ttl < res.MinHops {
-						res.MinHops = ttl
-					}
-				}
-			}
-
-			span.AddEvent("Traceroute completed", trace.WithAttributes(
-				attribute.Int("result.min_hops", res.MinHops),
-				attribute.Int("result.hop_count", len(hops)),
-				attribute.Stringer("result.elapsed_time", elapsed),
-			))
-
-			cResult <- internalResult{addr: t.Addr, res: res}
-		}(t)
+	results, err := tr.client.Run(ctx, tr.config.Targets, &tr.config.Options)
+	if err != nil {
+		log.ErrorContext(ctx, "Failed to run traceroute", "error", err)
+		span.SetStatus(codes.Error, "Failed to run traceroute")
+		span.RecordError(err)
+		return result{}
 	}
 
-	wg.Wait()
-	close(cResult)
-
-	for r := range cResult {
-		res[r.addr] = r.res
-	}
-
-	elapsed := time.Since(start)
-	log.InfoContext(ctx, "Finished traceroute check", "duration", elapsed)
-	return res
+	return aggregateResults(results)
 }
 
 // Shutdown is called once when the check is unregistered or sparrow shuts down
@@ -214,7 +124,7 @@ func (tr *Traceroute) UpdateConfig(cfg checks.Runtime) error {
 
 		for _, target := range tr.config.Targets {
 			if !slices.Contains(c.Targets, target) {
-				err := tr.metrics.Remove(target.Addr)
+				err := tr.metrics.Remove(target.Address)
 				if err != nil {
 					return err
 				}
@@ -233,7 +143,7 @@ func (tr *Traceroute) UpdateConfig(cfg checks.Runtime) error {
 
 // Schema returns an openapi3.SchemaRef of the result type returned by the check
 func (tr *Traceroute) Schema() (*openapi3.SchemaRef, error) {
-	return checks.OpenapiFromPerfData(map[string]result{})
+	return checks.OpenapiFromPerfData(result{})
 }
 
 // GetMetricCollectors allows the check to provide prometheus metric collectors
@@ -250,4 +160,19 @@ func (tr *Traceroute) Name() string {
 // target as a label
 func (tr *Traceroute) RemoveLabelledMetrics(target string) error {
 	return tr.metrics.Remove(target)
+}
+
+func aggregateResults(res traceroute.Result) result {
+	agg := result{}
+	for target, hops := range res {
+		if len(hops) == 0 {
+			// If no hops were found, we still want to return the target with an empty
+			// slice to indicate that the traceroute was attempted.
+			agg[target.String()] = []traceroute.Hop{}
+			continue
+		}
+		// Aggregate hops for the target
+		agg[target.String()] = hops
+	}
+	return agg
 }

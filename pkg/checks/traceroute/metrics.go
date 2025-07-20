@@ -28,9 +28,9 @@ func (m metrics) List() []prometheus.Collector {
 	}
 }
 
-func (m metrics) MinHops(data map[string]result) {
+func (m metrics) MinHops(data result) {
 	for target, hops := range data {
-		m.minHops.With(prometheus.Labels{labelTarget: target}).Set(float64(hops.MinHops))
+		m.minHops.With(prometheus.Labels{labelTarget: target}).Set(float64(len(hops)))
 	}
 }
 
