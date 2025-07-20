@@ -93,13 +93,13 @@ func (c *udpClient) trace(ctx context.Context, target Target, opts Options) erro
 	defer func() { _ = listener.Close() }()
 
 	// We need to send a single byte to trigger the ICMP error response.
+	start := time.Now()
 	if _, werr := nc.Write([]byte{0}); werr != nil {
 		return wrapError(ctx, werr, "failed sending UDP probe")
 	}
 
-	ctx, cancel := context.WithDeadline(ctx, time.Now().Add(opts.Timeout))
+	ctx, cancel := context.WithDeadline(ctx, start.Add(opts.Timeout))
 	defer cancel()
-	start := time.Now()
 	packet, err := listener.Read(ctx)
 	// Order matters: First check for expected errors,
 	// then handle unexpected errors.
