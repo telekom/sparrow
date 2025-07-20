@@ -21,9 +21,12 @@ loader:
 
 traceroute:
   interval: 5s
-  timeout: 3s
-  retries: 3
-  maxHops: 3
   targets:
-    - addr: 200.1.1.7
+    - protocol: tcp
+      address: 200.1.1.7
       port: 80
+  maxHops: 3
+  timeout: 3s
+  retry:
+    count: 3
+    delay: 2s
