@@ -36,7 +36,9 @@ type DNS struct {
 func (d *DNS) GetConfig() checks.Runtime {
 	d.Mu.Lock()
 	defer d.Mu.Unlock()
-	return &d.config
+	// Return a copy to prevent race conditions when the config is read while being updated
+	res := d.config
+	return &res
 }
 
 func (d *DNS) Name() string {
@@ -71,7 +73,9 @@ func (d *DNS) Run(ctx context.Context, cResult chan checks.ResultDTO) error {
 	defer cancel()
 	log := logger.FromContext(ctx)
 
-	log.Info("Starting dns check", "interval", d.config.Interval.String())
+	interval := d.GetConfig().(*Config).Interval
+
+	log.Info("Starting dns check", "interval", interval.String())
 	for {
 		select {
 		case <-ctx.Done():
@@ -79,7 +83,7 @@ func (d *DNS) Run(ctx context.Context, cResult chan checks.ResultDTO) error {
 			return ctx.Err()
 		case <-d.DoneChan:
 			return nil
-		case <-time.After(d.config.Interval):
+		case <-time.After(interval):
 			res := d.check(ctx)
 
 			cResult <- checks.ResultDTO{
@@ -90,6 +94,9 @@ func (d *DNS) Run(ctx context.Context, cResult chan checks.ResultDTO) error {
 				},
 			}
 			log.Debug("Successfully finished dns check run")
+
+			// Re-read interval in case config was updated
+			interval = d.GetConfig().(*Config).Interval
 		}
 	}
 }
@@ -145,7 +152,11 @@ func (d *DNS) RemoveLabelledMetrics(target string) error {
 func (d *DNS) check(ctx context.Context) map[string]result {
 	log := logger.FromContext(ctx)
 	log.Debug("Checking dns")
-	if len(d.config.Targets) == 0 {
+
+	// Get a copy of the config to avoid race conditions
+	cfg := d.GetConfig().(*Config)
+
+	if len(cfg.Targets) == 0 {
 		log.Debug("No targets defined")
 		return map[string]result{}
 	}
@@ -155,11 +166,11 @@ func (d *DNS) check(ctx context.Context) map[string]result {
 	results := map[string]result{}
 
 	d.client.SetDialer(&net.Dialer{
-		Timeout: d.config.Timeout,
+		Timeout: cfg.Timeout,
 	})
 
-	log.Debug("Getting dns status for each target in separate routine", "amount", len(d.config.Targets))
-	for _, t := range d.config.Targets {
+	log.Debug("Getting dns status for each target in separate routine", "amount", len(cfg.Targets))
+	for _, t := range cfg.Targets {
 		target := t
 		wg.Add(1)
 		lo := log.With("target", target)
@@ -173,7 +184,7 @@ func (d *DNS) check(ctx context.Context) map[string]result {
 				return err
 			}
 			return nil
-		}, d.config.Retry)
+		}, cfg.Retry)
 
 		go func() {
 			defer wg.Done()
