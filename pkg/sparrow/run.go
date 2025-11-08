@@ -46,6 +46,12 @@ type Sparrow struct {
 	cErr chan error
 	// cDone is used to signal that the sparrow was shut down because of an error
 	cDone chan struct{}
+	// cTargets is used to signal when the target list has changed
+	cTargets chan struct{}
+	// runtimeConfig stores the latest runtime configuration for reapplication
+	runtimeConfig runtime.Config
+	// configMutex protects access to runtimeConfig
+	configMutex sync.RWMutex
 	// shutOnce is used to ensure that the shutdown function is only called once
 	shutOnce sync.Once
 }
@@ -64,11 +70,12 @@ func New(cfg *config.Config) *Sparrow {
 		cRuntime:   make(chan runtime.Config, 1),
 		cErr:       make(chan error, 1),
 		cDone:      make(chan struct{}, 1),
+		cTargets:   make(chan struct{}, 1),
 		shutOnce:   sync.Once{},
 	}
 
 	if cfg.HasTargetManager() {
-		gm := targets.NewManager(cfg.SparrowName, cfg.TargetManager, m)
+		gm := targets.NewManager(cfg.SparrowName, cfg.TargetManager, m, sparrow.cTargets)
 		sparrow.tarMan = gm
 	}
 	sparrow.loader = config.NewLoader(cfg, sparrow.cRuntime)
@@ -106,9 +113,23 @@ func (s *Sparrow) Run(ctx context.Context) error {
 
 	for {
 		select {
+		// New runtime configuration available
 		case cfg := <-s.cRuntime:
 			cfg = s.enrichTargets(ctx, cfg)
 			s.controller.Reconcile(ctx, cfg)
+			s.configMutex.Lock()
+			s.runtimeConfig = cfg
+			s.configMutex.Unlock()
+		// Targets changed
+		case <-s.cTargets:
+			s.configMutex.RLock()
+			cfg := s.runtimeConfig
+			s.configMutex.RUnlock()
+			if !cfg.Empty() {
+				cfg = s.enrichTargets(ctx, cfg)
+				s.controller.Reconcile(ctx, cfg)
+				log.DebugContext(ctx, "Reapplied configuration due to target changes")
+			}
 		case <-ctx.Done():
 			s.shutdown(ctx)
 		case err := <-s.cErr:
