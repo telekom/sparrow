@@ -103,11 +103,12 @@ func Test_gitlabTargetManager_refreshTargets(t *testing.T) {
 				remote.SetFetchFilesErr(tt.wantErr)
 			}
 			gtm := &manager{
-				targets:    nil,
-				interactor: remote,
-				name:       "test",
-				cfg:        General{UnhealthyThreshold: time.Hour, Scheme: "https"},
-				metrics:    newMetrics(),
+				targets:        nil,
+				interactor:     remote,
+				name:           "test",
+				cfg:            General{UnhealthyThreshold: time.Hour, Scheme: "https"},
+				metrics:        newMetrics(),
+				targetsChanged: nil, // not testing channel functionality
 			}
 			if err := gtm.refreshTargets(context.Background()); (err != nil) != (tt.wantErr != nil) {
 				t.Fatalf("refreshTargets() error = %v, wantErr %v", err, tt.wantErr)
@@ -176,11 +177,12 @@ func Test_gitlabTargetManager_refreshTargets_No_Threshold(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			remote := remotemock.New(tt.mockTargets)
 			gtm := &manager{
-				targets:    nil,
-				interactor: remote,
-				name:       "test",
-				cfg:        General{UnhealthyThreshold: 0, Scheme: "https"},
-				metrics:    newMetrics(),
+				targets:        nil,
+				interactor:     remote,
+				name:           "test",
+				cfg:            General{UnhealthyThreshold: 0, Scheme: "https"},
+				metrics:        newMetrics(),
+				targetsChanged: nil, // not testing channel functionality
 			}
 			if err := gtm.refreshTargets(context.Background()); (err != nil) != (tt.wantErr != nil) {
 				t.Fatalf("refreshTargets() error = %v, wantErr %v", err, tt.wantErr)
@@ -247,7 +249,8 @@ func Test_gitlabTargetManager_GetTargets(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			gtm := &manager{
-				targets: tt.targets,
+				targets:        tt.targets,
+				targetsChanged: nil, // not testing channel functionality
 			}
 			got := gtm.GetTargets()
 
@@ -291,8 +294,9 @@ func Test_gitlabTargetManager_register(t *testing.T) {
 				glmock.SetPostFileErr(fmt.Errorf("failed to register"))
 			}
 			gtm := &manager{
-				interactor: glmock,
-				metrics:    newMetrics(),
+				interactor:     glmock,
+				metrics:        newMetrics(),
+				targetsChanged: nil, // not testing channel functionality
 			}
 			if err := gtm.register(context.Background()); (err != nil) != tt.wantErr {
 				t.Fatalf("register() error = %v, wantErr %v", err, tt.wantErr)
@@ -329,8 +333,9 @@ func Test_gitlabTargetManager_update(t *testing.T) {
 				glmock.SetPutFileErr(fmt.Errorf("failed to update registration"))
 			}
 			gtm := &manager{
-				interactor: glmock,
-				registered: true,
+				interactor:     glmock,
+				registered:     true,
+				targetsChanged: nil, // not testing channel functionality
 			}
 			wantErr := tt.wantPutError
 			if err := gtm.update(context.Background()); (err != nil) != wantErr {
@@ -814,12 +819,13 @@ func Test_gitlabTargetManager_Reconcile_No_Registration_No_Update(t *testing.T) 
 
 func mockGitlabTargetManager(g *remotemock.MockClient, name string) *manager { //nolint: unparam // irrelevant
 	return &manager{
-		targets:    nil,
-		mu:         sync.RWMutex{},
-		done:       make(chan struct{}, 1),
-		interactor: g,
-		name:       name,
-		metrics:    newMetrics(),
+		targets:        nil,
+		mu:             sync.RWMutex{},
+		done:           make(chan struct{}, 1),
+		interactor:     g,
+		name:           name,
+		metrics:        newMetrics(),
+		targetsChanged: nil, // not testing channel functionality
 		cfg: General{
 			CheckInterval:        100 * time.Millisecond,
 			UnhealthyThreshold:   1 * time.Second,
@@ -827,5 +833,219 @@ func mockGitlabTargetManager(g *remotemock.MockClient, name string) *manager { /
 			UpdateInterval:       testUpdateInterval,
 		},
 		registered: false,
+	}
+}
+
+// TestManagerTargetsChangedNotification tests that the manager signals through
+// the targetsChanged channel when targets are added, removed, or become unhealthy
+func TestManagerTargetsChangedNotification(t *testing.T) {
+	ctx := context.Background()
+	now := time.Now()
+
+	tests := []struct {
+		name           string
+		initialTargets []checks.GlobalTarget
+		updatedTargets []checks.GlobalTarget
+		expectSignal   bool
+		description    string
+	}{
+		{
+			name: "no signal when targets unchanged",
+			initialTargets: []checks.GlobalTarget{
+				{Url: "https://test1.example", LastSeen: now},
+			},
+			updatedTargets: []checks.GlobalTarget{
+				{Url: "https://test1.example", LastSeen: now},
+			},
+			expectSignal: false,
+			description:  "should not signal when targets list is identical",
+		},
+		{
+			name: "signal when target added",
+			initialTargets: []checks.GlobalTarget{
+				{Url: "https://test1.example", LastSeen: now},
+			},
+			updatedTargets: []checks.GlobalTarget{
+				{Url: "https://test1.example", LastSeen: now},
+				{Url: "https://test2.example", LastSeen: now},
+			},
+			expectSignal: true,
+			description:  "should signal when new target is added",
+		},
+		{
+			name: "signal when target removed",
+			initialTargets: []checks.GlobalTarget{
+				{Url: "https://test1.example", LastSeen: now},
+				{Url: "https://test2.example", LastSeen: now},
+			},
+			updatedTargets: []checks.GlobalTarget{
+				{Url: "https://test1.example", LastSeen: now},
+			},
+			expectSignal: true,
+			description:  "should signal when target is removed",
+		},
+		{
+			name: "signal when target becomes unhealthy",
+			initialTargets: []checks.GlobalTarget{
+				{Url: "https://test1.example", LastSeen: now},
+			},
+			updatedTargets: []checks.GlobalTarget{
+				{Url: "https://test1.example", LastSeen: now.Add(-2 * time.Hour)}, // unhealthy
+			},
+			expectSignal: true,
+			description:  "should signal when target LastSeen changes",
+		},
+		{
+			name:           "signal when going from empty to targets",
+			initialTargets: []checks.GlobalTarget{},
+			updatedTargets: []checks.GlobalTarget{
+				{Url: "https://test1.example", LastSeen: now},
+			},
+			expectSignal: true,
+			description:  "should signal when first target is added",
+		},
+		{
+			name: "signal when all targets removed",
+			initialTargets: []checks.GlobalTarget{
+				{Url: "https://test1.example", LastSeen: now},
+			},
+			updatedTargets: []checks.GlobalTarget{},
+			expectSignal:   true,
+			description:    "should signal when last target is removed",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Create a buffered channel to receive signals
+			targetsChanged := make(chan struct{}, 1)
+
+			// Create the manager with the initial targets
+			initialRemote := remotemock.New(tt.initialTargets)
+			gtm := &manager{
+				targets:        nil,
+				interactor:     initialRemote,
+				name:           "test",
+				cfg:            General{UnhealthyThreshold: time.Hour, Scheme: "https"},
+				metrics:        newMetrics(),
+				targetsChanged: targetsChanged,
+			}
+
+			// First refresh to set initial state
+			err := gtm.refreshTargets(ctx)
+			if err != nil {
+				t.Fatalf("Initial refreshTargets() failed: %v", err)
+			}
+
+			// Drain any signal from initial refresh
+			select {
+			case <-targetsChanged:
+				// Initial signal expected if targets were added
+			default:
+				// No signal if starting with empty targets
+			}
+
+			// Create a new mock with updated targets and replace the interactor
+			updatedRemote := remotemock.New(tt.updatedTargets)
+			gtm.interactor = updatedRemote
+
+			// Refresh targets again
+			err = gtm.refreshTargets(ctx)
+			if err != nil {
+				t.Fatalf("Second refreshTargets() failed: %v", err)
+			}
+
+			// Check if we received the expected signal
+			select {
+			case <-targetsChanged:
+				if !tt.expectSignal {
+					t.Fatalf("%s: unexpected signal received", tt.description)
+				}
+			case <-time.After(100 * time.Millisecond):
+				if tt.expectSignal {
+					t.Fatalf("%s: expected signal not received", tt.description)
+				}
+			}
+		})
+	}
+}
+
+// TestManagerTargetsChangedChannelNil tests that the manager works correctly
+// when the targetsChanged channel is nil (no panics, normal operation)
+func TestManagerTargetsChangedChannelNil(t *testing.T) {
+	ctx := context.Background()
+	now := time.Now()
+
+	targets := []checks.GlobalTarget{
+		{Url: "https://test-nil-1.example", LastSeen: now},
+		{Url: "https://test-nil-2.example", LastSeen: now},
+	}
+
+	remote := remotemock.New(targets)
+	gtm := &manager{
+		targets:        nil,
+		interactor:     remote,
+		name:           "test",
+		cfg:            General{UnhealthyThreshold: time.Hour, Scheme: "https"},
+		metrics:        newMetrics(),
+		targetsChanged: nil, // nil channel should not cause issues
+	}
+
+	// This should not panic or cause errors
+	err := gtm.refreshTargets(ctx)
+	if err != nil {
+		t.Fatalf("refreshTargets() with nil channel failed: %v", err)
+	}
+
+	// Verify targets were set correctly
+	actualTargets := gtm.GetTargets()
+	if len(actualTargets) != len(targets) {
+		t.Fatalf("Expected %d targets, got %d", len(targets), len(actualTargets))
+	}
+}
+
+// TestManagerTargetsChangedChannelFull tests that the manager doesn't block
+// when the targetsChanged channel is full
+func TestManagerTargetsChangedChannelFull(t *testing.T) {
+	ctx := context.Background()
+	now := time.Now()
+
+	// Create a channel with buffer size 1 and fill it
+	targetsChanged := make(chan struct{}, 1)
+	targetsChanged <- struct{}{} // Fill the channel
+
+	targets := []checks.GlobalTarget{
+		{Url: "https://test-full.example", LastSeen: now},
+	}
+
+	remote := remotemock.New(targets)
+	gtm := &manager{
+		targets:        nil,
+		interactor:     remote,
+		name:           "test",
+		cfg:            General{UnhealthyThreshold: time.Hour, Scheme: "https"},
+		metrics:        newMetrics(),
+		targetsChanged: targetsChanged,
+	}
+
+	// This should not block even though channel is full
+	done := make(chan error, 1)
+	go func() {
+		done <- gtm.refreshTargets(ctx)
+	}()
+
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Fatalf("refreshTargets() with full channel failed: %v", err)
+		}
+	case <-time.After(1 * time.Second):
+		t.Fatal("refreshTargets() blocked when channel was full")
+	}
+
+	// Verify targets were set correctly
+	actualTargets := gtm.GetTargets()
+	if len(actualTargets) != len(targets) {
+		t.Fatalf("Expected %d targets, got %d", len(targets), len(actualTargets))
 	}
 }
