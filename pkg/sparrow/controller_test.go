@@ -245,7 +245,6 @@ func TestChecksController_Reconcile(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cc := NewChecksController(db.NewInMemory(), metrics.New(metrics.Config{}))
-			// defer cc.Shutdown(ctx) // Ensure cleanup
 
 			for _, c := range tt.checks {
 				cc.RegisterCheck(ctx, c)

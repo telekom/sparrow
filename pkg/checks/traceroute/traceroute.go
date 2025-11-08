@@ -267,7 +267,7 @@ func doHop(ctx context.Context, addr net.Addr, ttl int, timeout time.Duration) (
 
 	span.SetAttributes(attribute.Int("ttl", ttl), attribute.Stringer("addr", addr))
 	if err == nil {
-		hop := handleTcpSuccess(conn, addr, ttl, latency)
+		hop := handleTcpSuccess(ctx, conn, addr, ttl, latency)
 		span.AddEvent("Hop succeeded", trace.WithAttributes(
 			attribute.String("hop_name", hop.Name),
 			attribute.Stringer("hop_addr", hop.Addr),
@@ -347,11 +347,12 @@ func newHopAddress(addr net.Addr) HopAddress {
 }
 
 // handleTcpSuccess handles a successful TCP connection by closing the connection and returning a Hop struct.
-func handleTcpSuccess(conn net.Conn, addr net.Addr, ttl int, latency time.Duration) *Hop {
+func handleTcpSuccess(ctx context.Context, conn net.Conn, addr net.Addr, ttl int, latency time.Duration) *Hop {
 	conn.Close() // #nosec G104
 
 	ipaddr := ipFromAddr(addr)
-	names, _ := net.LookupAddr(ipaddr.String()) // we don't care about this lookup failing
+	resolver := &net.Resolver{}
+	names, _ := resolver.LookupAddr(ctx, ipaddr.String()) // we don't care about this lookup failing
 
 	name := ""
 	if len(names) >= 1 {
@@ -384,7 +385,8 @@ func handleIcmpResponse(ctx context.Context, icmpListener *icmp.PacketConn, clie
 		// Check if the destination port matches our dialer's source port
 		if gotPort == clientPort {
 			ipaddr := ipFromAddr(addr)
-			names, _ := net.LookupAddr(ipaddr.String()) // we don't really care if this lookup works, so ignore the error
+			resolver := &net.Resolver{}
+			names, _ := resolver.LookupAddr(ctx, ipaddr.String()) // we don't really care if this lookup works, so ignore the error
 
 			name := ""
 			if len(names) >= 1 {
