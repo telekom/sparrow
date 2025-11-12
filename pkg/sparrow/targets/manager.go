@@ -31,6 +31,8 @@ type manager struct {
 	mu sync.RWMutex
 	// done is used to signal the reconciliation routine to stop
 	done chan struct{}
+	// targetsChanged is used to signal when the target list changes
+	targetsChanged chan<- struct{}
 	// name is the DNS name used for self-registration
 	name string
 	// registered contains whether the instance has already registered itself as a global target
@@ -61,7 +63,7 @@ func newMetrics() metrics {
 }
 
 // NewManager creates a new target manager
-func NewManager(name string, cfg TargetManagerConfig, mp smetrics.Provider) TargetManager { //nolint:gocritic // no performance concerns yet
+func NewManager(name string, cfg TargetManagerConfig, mp smetrics.Provider, targetsChanged chan<- struct{}) TargetManager { //nolint:gocritic // no performance concerns yet
 	m := newMetrics()
 	mp.GetRegistry().MustRegister(m.registered)
 
@@ -70,6 +72,7 @@ func NewManager(name string, cfg TargetManagerConfig, mp smetrics.Provider) Targ
 		cfg:             cfg.General,
 		mu:              sync.RWMutex{},
 		done:            make(chan struct{}, 1),
+		targetsChanged:  targetsChanged,
 		interactor:      cfg.Type.Interactor(&cfg.Config),
 		metrics:         m,
 		metricsProvider: mp,
@@ -230,6 +233,7 @@ func (t *manager) update(ctx context.Context) error {
 }
 
 // refreshTargets updates the targets with the latest available healthy targets
+// If the targets were changed, it notifies the sparrow instance
 func (t *manager) refreshTargets(ctx context.Context) error {
 	log := logger.FromContext(ctx)
 	t.mu.Lock()
@@ -261,9 +265,45 @@ func (t *manager) refreshTargets(ctx context.Context) error {
 		healthyTargets = append(healthyTargets, target)
 	}
 
+	// Check if targets have changed
+	oldTargets := t.targets
+	targetsChanged := t.targetsHaveChanged(oldTargets, healthyTargets)
+
 	t.targets = healthyTargets
 	log.DebugContext(ctx, "Updated global targets", "targets", len(t.targets))
+
+	// Signal targets changed if there was a change and channel is available
+	if targetsChanged && t.targetsChanged != nil {
+		select {
+		case t.targetsChanged <- struct{}{}:
+			log.DebugContext(ctx, "Signaled targets changed")
+		default:
+			// Channel is full, skip notification to avoid blocking
+		}
+	}
+
 	return nil
+}
+
+// targetsHaveChanged compares two target slices to determine if they differ
+func (t *manager) targetsHaveChanged(oldTargets, newTargets []checks.GlobalTarget) bool {
+	if len(oldTargets) != len(newTargets) {
+		return true
+	}
+
+	// Create a map for efficient comparison
+	oldMap := make(map[string]checks.GlobalTarget, len(oldTargets))
+	for _, target := range oldTargets {
+		oldMap[target.Url] = target
+	}
+
+	for _, newTarget := range newTargets {
+		if oldTarget, exists := oldMap[newTarget.Url]; !exists || oldTarget.LastSeen != newTarget.LastSeen {
+			return true
+		}
+	}
+
+	return false
 }
 
 // startTimer creates a new timer with the given duration.

@@ -61,7 +61,9 @@ func (l *Latency) Run(ctx context.Context, cResult chan checks.ResultDTO) error 
 	defer cancel()
 	log := logger.FromContext(ctx)
 
-	log.Info("Starting latency check", "interval", l.config.Interval.String())
+	interval := l.GetConfig().(*Config).Interval
+
+	log.Info("Starting latency check", "interval", interval.String())
 	for {
 		select {
 		case <-ctx.Done():
@@ -69,7 +71,7 @@ func (l *Latency) Run(ctx context.Context, cResult chan checks.ResultDTO) error 
 			return ctx.Err()
 		case <-l.DoneChan:
 			return nil
-		case <-time.After(l.config.Interval):
+		case <-time.After(interval):
 			res := l.check(ctx)
 
 			cResult <- checks.ResultDTO{
@@ -80,6 +82,9 @@ func (l *Latency) Run(ctx context.Context, cResult chan checks.ResultDTO) error 
 				},
 			}
 			log.Debug("Successfully finished latency check run")
+
+			// Re-read interval in case config was updated
+			interval = l.GetConfig().(*Config).Interval
 		}
 	}
 }
@@ -114,11 +119,13 @@ func (l *Latency) UpdateConfig(cfg checks.Runtime) error {
 	}
 }
 
-// GetConfig returns the current configuration of the latency Check
+// GetConfig returns a copy of the current configuration of the latency Check
 func (l *Latency) GetConfig() checks.Runtime {
 	l.Mu.Lock()
 	defer l.Mu.Unlock()
-	return &l.config
+	// Return a copy to prevent race conditions when the config is read while being updated
+	configCopy := l.config
+	return &configCopy
 }
 
 // Name returns the name of the check
@@ -151,20 +158,24 @@ func (l *Latency) RemoveLabelledMetrics(target string) error {
 func (l *Latency) check(ctx context.Context) map[string]result {
 	log := logger.FromContext(ctx)
 	log.Debug("Checking latency")
-	if len(l.config.Targets) == 0 {
+
+	// Get a copy of the config to avoid race conditions
+	cfg := l.GetConfig().(*Config)
+
+	if len(cfg.Targets) == 0 {
 		log.Debug("No targets defined")
 		return map[string]result{}
 	}
-	log.Debug("Getting latency status for each target in separate routine", "amount", len(l.config.Targets))
+	log.Debug("Getting latency status for each target in separate routine", "amount", len(cfg.Targets))
 
 	var mu sync.Mutex
 	var wg sync.WaitGroup
 	results := map[string]result{}
 
 	client := &http.Client{
-		Timeout: l.config.Timeout,
+		Timeout: cfg.Timeout,
 	}
-	for _, t := range l.config.Targets {
+	for _, t := range cfg.Targets {
 		target := t
 		wg.Add(1)
 		lo := log.With("target", target)
@@ -178,7 +189,7 @@ func (l *Latency) check(ctx context.Context) map[string]result {
 				return err
 			}
 			return nil
-		}, l.config.Retry)
+		}, cfg.Retry)
 
 		go func() {
 			defer wg.Done()
