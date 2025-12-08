@@ -59,7 +59,9 @@ func (h *Health) Run(ctx context.Context, cResult chan checks.ResultDTO) error {
 	defer cancel()
 	log := logger.FromContext(ctx)
 
-	log.Info("Starting healthcheck", "interval", h.config.Interval.String())
+	interval := h.GetConfig().(*Config).Interval
+
+	log.Info("Starting health check", "interval", interval.String())
 	for {
 		select {
 		case <-ctx.Done():
@@ -68,7 +70,7 @@ func (h *Health) Run(ctx context.Context, cResult chan checks.ResultDTO) error {
 		case <-h.DoneChan:
 			log.Debug("Soft shut down")
 			return nil
-		case <-time.After(h.config.Interval):
+		case <-time.After(interval):
 			res := h.check(ctx)
 
 			cResult <- checks.ResultDTO{
@@ -79,6 +81,9 @@ func (h *Health) Run(ctx context.Context, cResult chan checks.ResultDTO) error {
 				},
 			}
 			log.Debug("Successfully finished health check run")
+
+			// Re-read interval in case config was updated
+			interval = h.GetConfig().(*Config).Interval
 		}
 	}
 }
@@ -114,11 +119,13 @@ func (h *Health) UpdateConfig(cfg checks.Runtime) error {
 	}
 }
 
-// GetConfig returns the current configuration of the check
+// GetConfig returns a copy of the current configuration of the check
 func (h *Health) GetConfig() checks.Runtime {
 	h.Mu.Lock()
 	defer h.Mu.Unlock()
-	return &h.config
+	// Return a copy to prevent race conditions when the config is read while being updated
+	configCopy := h.config
+	return &configCopy
 }
 
 // Name returns the name of the check
@@ -150,27 +157,31 @@ func (h *Health) RemoveLabelledMetrics(target string) error {
 func (h *Health) check(ctx context.Context) map[string]string {
 	log := logger.FromContext(ctx)
 	log.Debug("Checking health")
-	if len(h.config.Targets) == 0 {
+
+	// Get a copy of the config to avoid race conditions
+	cfg := h.GetConfig().(*Config)
+
+	if len(cfg.Targets) == 0 {
 		log.Debug("No targets defined")
 		return map[string]string{}
 	}
-	log.Debug("Getting health status for each target in separate routine", "amount", len(h.config.Targets))
+	log.Debug("Getting health status for each target in separate routine", "amount", len(cfg.Targets))
 
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 	results := map[string]string{}
 
 	client := &http.Client{
-		Timeout: h.config.Timeout,
+		Timeout: cfg.Timeout,
 	}
-	for _, t := range h.config.Targets {
+	for _, t := range cfg.Targets {
 		target := t
 		wg.Add(1)
 		l := log.With("target", target)
 
 		getHealthRetry := helper.Retry(func(ctx context.Context) error {
 			return getHealth(ctx, client, target)
-		}, h.config.Retry)
+		}, cfg.Retry)
 
 		go func() {
 			defer wg.Done()
@@ -179,7 +190,7 @@ func (h *Health) check(ctx context.Context) map[string]string {
 			l.Debug("Starting retry routine to get health status")
 			if err := getHealthRetry(ctx); err != nil {
 				state = 0
-				l.Warn(fmt.Sprintf("Health check failed after %d retries", h.config.Retry.Count), "error", err)
+				l.Warn(fmt.Sprintf("Health check failed after %d retries", cfg.Retry.Count), "error", err)
 			}
 
 			l.Debug("Successfully got health status of target", "status", stateMapping[state])

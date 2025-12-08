@@ -82,7 +82,8 @@ func (tr *Traceroute) Run(ctx context.Context, cResult chan checks.ResultDTO) er
 	defer cancel()
 	log := logger.FromContext(ctx)
 
-	log.InfoContext(ctx, "Starting traceroute check", "interval", tr.config.Interval.String())
+	interval := tr.GetConfig().(*Config).Interval
+	log.InfoContext(ctx, "Starting traceroute check", "interval", interval.String())
 	for {
 		select {
 		case <-ctx.Done():
@@ -90,7 +91,7 @@ func (tr *Traceroute) Run(ctx context.Context, cResult chan checks.ResultDTO) er
 			return ctx.Err()
 		case <-tr.DoneChan:
 			return nil
-		case <-time.After(tr.config.Interval):
+		case <-time.After(interval):
 			res := tr.check(ctx)
 			tr.metrics.MinHops(res)
 			cResult <- checks.ResultDTO{
@@ -101,32 +102,40 @@ func (tr *Traceroute) Run(ctx context.Context, cResult chan checks.ResultDTO) er
 				},
 			}
 			log.DebugContext(ctx, "Successfully finished traceroute check run")
+
+			// Re-read interval in case config was updated
+			interval = tr.GetConfig().(*Config).Interval
 		}
 	}
 }
 
-// GetConfig returns the current configuration of the check
+// GetConfig returns a copy of the current configuration of the check
 func (tr *Traceroute) GetConfig() checks.Runtime {
 	tr.Mu.Lock()
 	defer tr.Mu.Unlock()
-	return &tr.config
+	// Return a copy to prevent race conditions when the config is read while being updated
+	configCopy := tr.config
+	return &configCopy
 }
 
 func (tr *Traceroute) check(ctx context.Context) map[string]result {
 	res := make(map[string]result)
 	log := logger.FromContext(ctx)
 
+	// Get a copy of the config to avoid race conditions
+	cfg := tr.GetConfig().(*Config)
+
 	type internalResult struct {
 		addr string
 		res  result
 	}
 
-	cResult := make(chan internalResult, len(tr.config.Targets))
+	cResult := make(chan internalResult, len(cfg.Targets))
 	var wg sync.WaitGroup
 	start := time.Now()
-	wg.Add(len(tr.config.Targets))
+	wg.Add(len(cfg.Targets))
 
-	for _, t := range tr.config.Targets {
+	for _, t := range cfg.Targets {
 		go func(t Target) {
 			defer wg.Done()
 			l := log.With("target", t.String())
@@ -135,11 +144,11 @@ func (tr *Traceroute) check(ctx context.Context) map[string]result {
 			c, span := tr.tracer.Start(ctx, t.String(), trace.WithAttributes(
 				attribute.String("target.addr", t.Addr),
 				attribute.Int("target.port", t.Port),
-				attribute.Stringer("config.interval", tr.config.Interval),
-				attribute.Stringer("config.timeout", tr.config.Timeout),
-				attribute.Int("config.max_hops", tr.config.MaxHops),
-				attribute.Int("config.retry.count", tr.config.Retry.Count),
-				attribute.Stringer("config.retry.delay", tr.config.Retry.Delay),
+				attribute.Stringer("config.interval", cfg.Interval),
+				attribute.Stringer("config.timeout", cfg.Timeout),
+				attribute.Int("config.max_hops", cfg.MaxHops),
+				attribute.Int("config.retry.count", cfg.Retry.Count),
+				attribute.Stringer("config.retry.delay", cfg.Retry.Delay),
 			))
 			defer span.End()
 
@@ -147,9 +156,9 @@ func (tr *Traceroute) check(ctx context.Context) map[string]result {
 			hops, err := tr.traceroute(c, tracerouteConfig{
 				Dest:    t.Addr,
 				Port:    t.Port,
-				Timeout: tr.config.Timeout,
-				MaxHops: tr.config.MaxHops,
-				Rc:      tr.config.Retry,
+				Timeout: cfg.Timeout,
+				MaxHops: cfg.MaxHops,
+				Rc:      cfg.Retry,
 			})
 			elapsed := time.Since(s)
 
@@ -166,7 +175,7 @@ func (tr *Traceroute) check(ctx context.Context) map[string]result {
 
 			res := result{
 				Hops:    hops,
-				MinHops: tr.config.MaxHops,
+				MinHops: cfg.MaxHops,
 			}
 			for ttl, hop := range hops {
 				for _, attempt := range hop {

@@ -247,7 +247,7 @@ func TestChecksController_Reconcile(t *testing.T) {
 			cc := NewChecksController(db.NewInMemory(), metrics.New(metrics.Config{}))
 
 			for _, c := range tt.checks {
-				cc.checks.Add(c)
+				cc.RegisterCheck(ctx, c)
 			}
 
 			cc.Reconcile(ctx, tt.newRuntimeConfig)
@@ -269,6 +269,16 @@ func TestChecksController_Reconcile(t *testing.T) {
 
 			// check that the number of registered checks is correct
 			assert.Equal(t, len(tt.newRuntimeConfig.Iter()), len(cc.checks.Iter()))
+
+			// assert that the metrics for the registered checks are present
+			for _, c := range cc.checks.Iter() {
+				for _, collector := range c.GetMetricCollectors() {
+					err := cc.metrics.GetRegistry().Register(collector)
+					if err == nil {
+						t.Errorf("Expected metric collector for check %s to be already registered", c.Name())
+					}
+				}
+			}
 		})
 	}
 }
@@ -321,8 +331,9 @@ func TestChecksController_Reconcile_Update(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cc := NewChecksController(db.NewInMemory(), metrics.New(metrics.Config{}))
+
 			for _, c := range tt.checks {
-				cc.checks.Add(c)
+				cc.RegisterCheck(ctx, c)
 			}
 
 			cc.Reconcile(ctx, tt.newRuntimeConfig)
@@ -335,6 +346,16 @@ func TestChecksController_Reconcile_Update(t *testing.T) {
 				case latency.CheckName:
 					lc := c.(*latency.Latency)
 					assert.Equal(t, tt.newRuntimeConfig.Latency.Targets, lc.GetConfig().(*latency.Config).Targets)
+				}
+			}
+
+			// assert that the metrics for the registered checks are present
+			for _, c := range cc.checks.Iter() {
+				for _, collector := range c.GetMetricCollectors() {
+					err := cc.metrics.GetRegistry().Register(collector)
+					if err == nil {
+						t.Errorf("Expected metric collector for check %s to be already registered", c.Name())
+					}
 				}
 			}
 		})
@@ -363,6 +384,13 @@ func TestChecksController_RegisterCheck(t *testing.T) {
 			if cc.checks.Iter()[0] != tt.check {
 				t.Errorf("Expected one check to be registered")
 			}
+			// assert that the metrics for the registered checks are present
+			for _, collector := range tt.check.GetMetricCollectors() {
+				err := cc.metrics.GetRegistry().Register(collector)
+				if err == nil {
+					t.Errorf("Expected metric collector for check %s to be already registered", tt.check.Name())
+				}
+			}
 		})
 	}
 }
@@ -386,6 +414,14 @@ func TestChecksController_UnregisterCheck(t *testing.T) {
 
 			if len(cc.checks.Iter()) != 0 {
 				t.Errorf("Expected check to be unregistered")
+			}
+
+			// assert that the metrics for the unregistered checks are removed
+			for _, collector := range tt.check.GetMetricCollectors() {
+				registered := cc.metrics.GetRegistry().Unregister(collector)
+				if registered {
+					t.Errorf("Expected metric collector for check %s to be unregistered", tt.check.Name())
+				}
 			}
 		})
 	}
