@@ -53,15 +53,23 @@ func TestSparrow_Run_FullComponentStart(t *testing.T) {
 
 	s := New(c)
 	ctx := context.Background()
+	errCh := make(chan error, 1)
 	go func() {
 		err := s.Run(ctx)
-		if err != nil {
-			t.Errorf("Sparrow.Run() error = %v", err)
-		}
+		errCh <- err
 	}()
 
 	t.Log("Running sparrow for 10ms")
 	time.Sleep(10 * time.Millisecond)
+
+	select {
+	case err := <-errCh:
+		if err != nil {
+			t.Fatalf("Sparrow.Run() error = %v", err)
+		}
+	default:
+		// No error received, all good
+	}
 }
 
 // TestSparrow_Run_ContextCancel tests that after a context cancels the Run method
