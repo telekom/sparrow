@@ -8,8 +8,8 @@ description: A Helm chart to install Sparrow
 type: application
 keywords:
   - monitoring
-version: 0.0.4
-appVersion: "v0.5.0"
+version: 0.0.6
+appVersion: "v0.5.1"
 sources:
   - https://github.com/telekom/sparrow
 maintainers:
