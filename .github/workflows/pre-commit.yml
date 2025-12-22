@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-name: pre-commit.ci
+name: Pre-Commit Checks
 
 on: [pull_request]
 
