@@ -52,6 +52,18 @@ type metrics struct {
 	registered prometheus.Gauge
 }
 
+// setRegistered sets the registered gauge to 0 or 1
+func (m *metrics) setRegistered(registered bool) {
+	if m.registered == nil {
+		return
+	}
+	var v float64
+	if registered {
+		v = 1
+	}
+	m.registered.Set(v)
+}
+
 // newMetrics creates a new metrics struct
 func newMetrics() metrics {
 	return metrics{
@@ -66,6 +78,7 @@ func newMetrics() metrics {
 func NewManager(name string, cfg TargetManagerConfig, mp smetrics.Provider, targetsChanged chan<- struct{}) TargetManager { //nolint:gocritic // no performance concerns yet
 	m := newMetrics()
 	mp.GetRegistry().MustRegister(m.registered)
+	m.registered.Set(0)
 
 	return &manager{
 		name:            name,
@@ -157,7 +170,7 @@ func (t *manager) Shutdown(ctx context.Context) error {
 			return fmt.Errorf("failed to shutdown gracefully: %w", errors.Join(errC, err))
 		}
 		t.registered = false
-		t.metrics.registered.Set(0)
+		t.metrics.setRegistered(false)
 		log.InfoContext(ctx, "Successfully unregistered as global target")
 	}
 
@@ -198,7 +211,7 @@ func (t *manager) register(ctx context.Context) error {
 	}
 	log.InfoContext(ctx, "Successfully registered")
 	t.registered = true
-	t.metrics.registered.Set(1)
+	t.metrics.setRegistered(true)
 
 	return nil
 }
@@ -229,6 +242,7 @@ func (t *manager) update(ctx context.Context) error {
 		return err
 	}
 	log.DebugContext(ctx, "Successfully updated registration")
+	t.metrics.setRegistered(true)
 	return nil
 }
 
@@ -250,7 +264,7 @@ func (t *manager) refreshTargets(ctx context.Context) error {
 		if !t.registered && target.Url == fmt.Sprintf("%s://%s", t.cfg.Scheme, t.name) {
 			log.DebugContext(ctx, "Found self as global target", "lastSeenMinsAgo", time.Since(target.LastSeen).Minutes())
 			t.registered = true
-			t.metrics.registered.Set(1)
+			t.metrics.setRegistered(true)
 		}
 
 		if t.cfg.UnhealthyThreshold == 0 {

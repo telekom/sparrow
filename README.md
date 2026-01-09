@@ -381,6 +381,12 @@ which is named after the DNS name of the `sparrow`. The state file contains the 
 }
 ```
 
+#### Target Manager Metrics
+
+- `sparrow_target_manager_registered`
+  - Type: Gauge
+  - Description: Indicates whether this sparrow instance is registered with the configured target manager (1 = registered, 0 = not registered). Only exposed when `targetManager.enabled` is true.
+
 ### Check: Health
 
 Available configuration options:
