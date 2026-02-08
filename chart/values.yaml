@@ -148,6 +148,12 @@ envFromSecrets:
 # see: https://github.com/telekom/sparrow/blob/main/docs/sparrow_run.md
 sparrowConfig:
   name: sparrow.com
+  # Optional ownership metadata (exposed as sparrow_instance_info Prometheus metric)
+  # metadata:
+  #   team:
+  #     name: platform-team
+  #     email: platform@example.com
+  #   platform: k8s-prod-eu
   loader:
     type: file
     interval: 30s
@@ -168,6 +174,11 @@ sparrowConfig:
 #       count: 5
 #   file:
 #     path: /config/checks.yaml
+# metadata:
+#   team:
+#     name: string
+#     email: string
+#   platform: string
 # targetManager:
 #   type: gitlab
 #   checkInterval: 300s

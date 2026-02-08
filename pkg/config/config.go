@@ -14,9 +14,26 @@ import (
 	"github.com/telekom/sparrow/pkg/api"
 )
 
+// Metadata holds optional ownership and platform information for the Sparrow instance.
+// Exposed via the sparrow_instance_info Prometheus metric for alert routing and multi-team operability.
+type Metadata struct {
+	// Team holds team ownership information
+	Team TeamMetadata `yaml:"team" mapstructure:"team"`
+	// Platform identifies the deployment platform (e.g. k8s-prod-eu, aws-eu-west-1)
+	Platform string `yaml:"platform" mapstructure:"platform"`
+}
+
+// TeamMetadata holds team name and contact for ownership
+type TeamMetadata struct {
+	Name  string `yaml:"name" mapstructure:"name"`
+	Email string `yaml:"email" mapstructure:"email"`
+}
+
 type Config struct {
 	// SparrowName is the DNS name of the sparrow
 	SparrowName string `yaml:"name" mapstructure:"name"`
+	// Metadata is optional ownership and platform metadata (exposed as sparrow_instance_info)
+	Metadata Metadata `yaml:"metadata" mapstructure:"metadata"`
 	// Loader is the configuration for the loader
 	Loader LoaderConfig `yaml:"loader" mapstructure:"loader"`
 	// Api is the configuration for the api server
