@@ -80,6 +80,14 @@ func New(cfg *config.Config) *Sparrow {
 	}
 	sparrow.loader = config.NewLoader(cfg, sparrow.cRuntime)
 
+	// Register ownership metadata as Prometheus info metric (once per instance)
+	if err := metrics.RegisterInstanceInfo(m.GetRegistry(), cfg.SparrowName, cfg.Metadata.Team.Name, cfg.Metadata.Team.Email, cfg.Metadata.Platform); err != nil {
+		// Non-fatal: instance can run without the info metric
+		// Logging requires context; use background with logger for startup
+		log := logger.FromContext(context.Background())
+		log.Error("Failed to register sparrow_instance_info metric", "error", err)
+	}
+
 	return sparrow
 }
 
