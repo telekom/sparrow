@@ -46,7 +46,7 @@ jobs:
         uses: anchore/sbom-action/download-syft@v0.22.2
 
       - name: Build, push & release
-        uses: goreleaser/goreleaser-action@v6
+        uses: goreleaser/goreleaser-action@v7
         with:
           version: latest
           args: release --clean
