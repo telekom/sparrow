@@ -8,7 +8,7 @@ SPDX-License-Identifier: CC-BY-4.0
 
 ## Summary
 
-Sparrow exposes optional ownership and platform metadata via a dedicated Prometheus **info metric** (`sparrow_instance_info`), so operators can identify which team owns each instance, route alerts correctly, and correlate metrics across multiple Sparrow deployments.
+Sparrow exposes optional instance metadata via a dedicated Prometheus **info metric** (`sparrow_instance_info`), so operators can identify owners, route alerts correctly, and correlate metrics across multiple Sparrow deployments.
 
 ## Why Option 1 (Dedicated Info Metric)
 
@@ -19,19 +19,19 @@ Sparrow exposes optional ownership and platform metadata via a dedicated Prometh
 
 ## Implementation Choices
 
-1. **Config shape:** `metadata.team.name`, `metadata.team.email`, `metadata.platform` under startup config, with Viper binding for flags/env/file. All fields optional; omitted fields appear as empty labels so the metric is always present with at least `instance_name`.
+1. **Config shape:** `metadata` is a map of arbitrary key-value pairs under startup config (e.g. `team_name`, `platform`, `region`). All fields optional; omitted keys are not emitted as labels. The key `instance_name` is reserved and set from the Sparrow DNS name.
 2. **Registration point:** Instance info is registered in `sparrow.New()` after the metrics provider is created. Registration failure is logged but non-fatal so the process still starts.
-3. **Metrics package:** A small `RegisterInstanceInfo(registry, instanceName, teamName, teamEmail, platform)` in `pkg/sparrow/metrics` keeps the metrics package independent of `pkg/config` and makes the behaviour easy to test.
+3. **Metrics package:** A small `RegisterInstanceInfo(registry, instanceName, metadata)` in `pkg/sparrow/metrics` keeps the metrics package independent of `pkg/config` and makes the behaviour easy to test.
 4. **Helm:** Metadata is optional under `sparrowConfig` in values; backward compatibility is preserved when metadata is not provided.
 
 ## Prometheus Usage
 
-- **Alert routing:** Alertmanager or routing rules can use `sparrow_instance_info` to add team/email/platform to alerts.
-- **Dashboards:** `group_left(team_name, team_email, platform) sparrow_instance_info` joins ownership onto any Sparrow metric by scrape `instance`.
-- **Multi-team views:** Filter or group by `team_name` or `platform` without changing existing metric names or labels.
+- **Alert routing:** Alertmanager or routing rules can use `sparrow_instance_info` to add ownership metadata to alerts.
+- **Dashboards:** `group_left(...) sparrow_instance_info` joins metadata onto any Sparrow metric by scrape `instance`.
+- **Multi-team views:** Filter or group by `team_name`, `platform`, `region`, or any other configured labels without changing existing metric names or labels.
 
 ## Deliverables
 
-- **Code:** `pkg/config` (Metadata, TeamMetadata), `cmd/run` (flags), `pkg/sparrow/metrics` (RegisterInstanceInfo + test), `pkg/sparrow` (registration in New).
+- **Code:** `pkg/config` (Metadata map), `pkg/sparrow/metrics` (RegisterInstanceInfo + test), `pkg/sparrow` (registration in New).
 - **Helm:** `chart/values.yaml` extended with commented metadata example; config is merged into existing sparrowConfig.
-- **Docs:** README (metadata config table, instance info metric, PromQL examples), `docs/sparrow_run.md` (new flags), this design summary.
+- **Docs:** README (metadata config, instance info metric, PromQL examples), this design summary.

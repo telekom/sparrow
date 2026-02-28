@@ -14,7 +14,11 @@ import (
 func TestRegisterInstanceInfo(t *testing.T) {
 	registry := prometheus.NewRegistry()
 
-	err := RegisterInstanceInfo(registry, "sparrow.example.com", "platform-team", "platform@example.com", "k8s-prod-eu")
+	err := RegisterInstanceInfo(registry, "sparrow.example.com", map[string]string{
+		"team_name":  "platform-team",
+		"team_email": "platform@example.com",
+		"platform":   "k8s-prod-eu",
+	})
 	if err != nil {
 		t.Fatalf("RegisterInstanceInfo() error = %v", err)
 	}
@@ -55,7 +59,7 @@ func TestRegisterInstanceInfo(t *testing.T) {
 func TestRegisterInstanceInfo_emptyMetadata(t *testing.T) {
 	registry := prometheus.NewRegistry()
 
-	err := RegisterInstanceInfo(registry, "sparrow.example.com", "", "", "")
+	err := RegisterInstanceInfo(registry, "sparrow.example.com", nil)
 	if err != nil {
 		t.Fatalf("RegisterInstanceInfo() with empty metadata error = %v", err)
 	}
@@ -85,12 +89,20 @@ func TestRegisterInstanceInfo_emptyMetadata(t *testing.T) {
 func TestRegisterInstanceInfo_doubleRegistration(t *testing.T) {
 	registry := prometheus.NewRegistry()
 
-	err := RegisterInstanceInfo(registry, "sparrow.example.com", "team-a", "team-a@example.com", "k8s-prod")
+	err := RegisterInstanceInfo(registry, "sparrow.example.com", map[string]string{
+		"team_name":  "team-a",
+		"team_email": "team-a@example.com",
+		"platform":   "k8s-prod",
+	})
 	if err != nil {
 		t.Fatalf("first RegisterInstanceInfo() error = %v", err)
 	}
 
-	err2 := RegisterInstanceInfo(registry, "other.example.com", "team-b", "team-b@example.com", "k8s-staging")
+	err2 := RegisterInstanceInfo(registry, "other.example.com", map[string]string{
+		"team_name":  "team-b",
+		"team_email": "team-b@example.com",
+		"platform":   "k8s-staging",
+	})
 	if err2 == nil {
 		t.Fatal("expected second RegisterInstanceInfo to return an error (duplicate collector)")
 	}
@@ -104,7 +116,9 @@ func TestRegisterInstanceInfo_doubleRegistration(t *testing.T) {
 func TestRegisterInstanceInfo_partialMetadata(t *testing.T) {
 	registry := prometheus.NewRegistry()
 
-	err := RegisterInstanceInfo(registry, "sparrow.example.com", "platform-team", "", "")
+	err := RegisterInstanceInfo(registry, "sparrow.example.com", map[string]string{
+		"team_name": "platform-team",
+	})
 	if err != nil {
 		t.Fatalf("RegisterInstanceInfo() with partial metadata error = %v", err)
 	}
@@ -121,8 +135,7 @@ func TestRegisterInstanceInfo_partialMetadata(t *testing.T) {
 				for _, lp := range m.GetLabel() {
 					labels[lp.GetName()] = lp.GetValue()
 				}
-				if labels["instance_name"] != "sparrow.example.com" || labels["team_name"] != "platform-team" ||
-					labels["team_email"] != "" || labels["platform"] != "" {
+				if labels["instance_name"] != "sparrow.example.com" || labels["team_name"] != "platform-team" {
 					t.Errorf("unexpected labels (expected partial metadata): %v", labels)
 				}
 			}

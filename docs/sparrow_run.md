@@ -15,9 +15,6 @@ sparrow run [flags]
 ```
       --apiAddress string               api: The address the server is listening on (default ":8080")
   -h, --help                            help for run
-      --metadataPlatform string         metadata: Platform identifier (e.g. k8s-prod-eu)
-      --metadataTeamEmail string        metadata: Team contact email
-      --metadataTeamName string         metadata: Team name owning this instance (for alert routing)
       --loaderFilePath string           file loader: The path to the file to read the runtime config from (default "config.yaml")
       --loaderHttpRetryCount int        http loader: Amount of retries trying to load the configuration (default 3)
       --loaderHttpRetryDelay duration   http loader: The initial delay between retries in seconds (default 1s)

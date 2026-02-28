@@ -199,17 +199,11 @@ export SPARROW_ANY_OTHER_OPTION="Some value"
 
 Just write out the path to the attribute, delimited by `_`.
 
-#### Instance metadata (ownership)
+#### Instance metadata (optional)
 
-You can optionally configure ownership and platform metadata so that operators can identify which team owns a Sparrow instance and route alerts correctly. This is exposed as a single Prometheus info-style metric, `sparrow_instance_info`, emitted once per instance at startup.
+You can optionally configure instance metadata so operators can identify owners, route alerts, and correlate metrics across deployments. This metadata is exposed as a single Prometheus info-style metric, `sparrow_instance_info`, emitted once per instance at startup.
 
-| Field | Type | Description |
-| ----- | ---- | ----------- |
-| `metadata.team.name` | string | Team name owning this instance |
-| `metadata.team.email` | string | Team contact email (e.g. for alert routing) |
-| `metadata.platform` | string | Platform identifier (e.g. `k8s-prod-eu`, `aws-eu-west-1`) |
-
-All metadata fields are optional. Omitted fields appear as empty labels. Example env vars: `SPARROW_METADATA_TEAM_NAME`, `SPARROW_METADATA_TEAM_EMAIL`, `SPARROW_METADATA_PLATFORM`.
+`metadata` is a map of arbitrary key-value pairs. Keys must be valid Prometheus label names (e.g. `team_name`, `platform`, `region`, `environment`). The key `instance_name` is reserved and set automatically from the Sparrow DNS name.
 
 #### Example Startup Configuration
 
@@ -217,13 +211,13 @@ All metadata fields are optional. Omitted fields appear as empty labels. Example
 # DNS sparrow is exposed on 
 name: sparrow.example.com
 
-# Optional: ownership and platform metadata (exposed as sparrow_instance_info Prometheus metric)
-# Used for alert routing and correlating metrics across multi-team deployments.
+# Optional: instance metadata (exposed as sparrow_instance_info Prometheus metric)
+# Used for alert routing and correlating metrics across deployments.
 # metadata:
-#   team:
-#     name: platform-team
-#     email: platform@example.com
+#   team_name: platform-team
+#   team_email: platform@example.com
 #   platform: k8s-prod-eu
+#   region: eu-west-1
 
 # Selects and configures a loader to continuously fetch the checks' configuration at runtime
 loader:
@@ -662,12 +656,12 @@ at `/v1/metrics/{check-name}`. The API's definition is available at `/openapi`.
 
 The `sparrow` provides a `/metrics` endpoint to expose application metrics. In addition to runtime information, the sparrow provides specific metrics for each check. Refer to the [Checks](#checks) section for more detailed information.
 
-#### Instance info metric
+### Instance info metric
 
 - `sparrow_instance_info`
   - Type: Gauge (info-style, value always 1)
-  - Description: Ownership and platform metadata for this Sparrow instance. Emitted once per instance at startup.
-  - Labels: `team_name`, `team_email`, `platform`, `instance_name`
+  - Description: Instance metadata for this Sparrow instance. Emitted once per instance at startup.
+  - Labels: `instance_name` plus any user-defined metadata keys
   - Use for: Alert routing, identifying instance owners, correlating metrics across multiple Sparrow deployments.
 
 Example PromQL for multi-team dashboards:

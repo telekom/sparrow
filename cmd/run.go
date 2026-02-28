@@ -47,11 +47,6 @@ func NewCmdRun() *cobra.Command {
 	NewFlag("loader.http.retry.delay", "loaderHttpRetryDelay").Duration().Bind(cmd, defaultHttpRetryDelay, "http loader: The initial delay between retries in seconds")
 	NewFlag("loader.file.path", "loaderFilePath").String().Bind(cmd, "config.yaml", "file loader: The path to the file to read the runtime config from")
 
-	// Optional ownership metadata (exposed as sparrow_instance_info metric)
-	NewFlag("metadata.team.name", "metadataTeamName").String().Bind(cmd, "", "metadata: Team name owning this instance (for alert routing)")
-	NewFlag("metadata.team.email", "metadataTeamEmail").String().Bind(cmd, "", "metadata: Team contact email")
-	NewFlag("metadata.platform", "metadataPlatform").String().Bind(cmd, "", "metadata: Platform identifier (e.g. k8s-prod-eu)")
-
 	return cmd
 }
 
