@@ -124,8 +124,8 @@ ConfigMap.
 Use the following configuration values to use a runtime configuration by the `http` loader:
 
 ```yaml
-startupConfig:
-  ...
+sparrowConfig:
+  name: sparrow.example.com
   loader:
     type: http
     interval: 30s
@@ -199,11 +199,25 @@ export SPARROW_ANY_OTHER_OPTION="Some value"
 
 Just write out the path to the attribute, delimited by `_`.
 
+#### Instance metadata (optional)
+
+You can optionally configure instance metadata so operators can identify owners, route alerts, and correlate metrics across deployments. This metadata is exposed as a single Prometheus info-style metric, `sparrow_instance_info`, emitted once per instance at startup.
+
+`metadata` is a map of arbitrary key-value pairs. Keys must be valid Prometheus label names (e.g. `team_name`, `platform`, `region`, `environment`). The key `instance_name` is reserved and set automatically from the Sparrow DNS name.
+
 #### Example Startup Configuration
 
 ```yaml
 # DNS sparrow is exposed on 
 name: sparrow.example.com
+
+# Optional: instance metadata (exposed as sparrow_instance_info Prometheus metric)
+# Used for alert routing and correlating metrics across deployments.
+# metadata:
+#   team_name: platform-team
+#   team_email: platform@example.com
+#   platform: k8s-prod-eu
+#   region: eu-west-1
 
 # Selects and configures a loader to continuously fetch the checks' configuration at runtime
 loader:
@@ -641,6 +655,27 @@ at `/v1/metrics/{check-name}`. The API's definition is available at `/openapi`.
 ## Metrics, Telemetry & Dashboards
 
 The `sparrow` provides a `/metrics` endpoint to expose application metrics. In addition to runtime information, the sparrow provides specific metrics for each check. Refer to the [Checks](#checks) section for more detailed information.
+
+### Instance info metric
+
+- `sparrow_instance_info`
+  - Type: Gauge (info-style, value always 1)
+  - Description: Instance metadata for this Sparrow instance. Emitted once per instance at startup.
+  - Labels: `instance_name` plus any user-defined metadata keys
+  - Use for: Alert routing, identifying instance owners, correlating metrics across multiple Sparrow deployments.
+
+Example PromQL for multi-team dashboards:
+
+```promql
+# All Sparrow instances with their owner and platform
+sparrow_instance_info
+
+# Instances by team
+sparrow_instance_info{team_name="platform-team"}
+
+# Join check metrics with ownership (e.g. health by team)
+sparrow_health_up * on(instance) group_left(team_name, team_email, platform) sparrow_instance_info
+```
 
 ### Prometheus Integration
 

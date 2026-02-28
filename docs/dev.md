@@ -6,6 +6,7 @@ SPDX-License-Identifier: CC-BY-4.0
 
 # Developer Documentation <!-- omit from toc -->
 
+- [Running tests](#running-tests)
 - [Using `reuse` for license handling](#using-reuse-for-license-handling)
   - [Install](#install)
   - [CLI Usage](#cli-usage)
@@ -44,3 +45,26 @@ Use the `CC-BY-4.0` SPDX license header for documentation (eg. `.md`) files.
 In case a license header is not suitable for a file or directory (eg. auto-generated files) the `REUSE.toml` configuration file can be used.
 
 Add the file path to the `REUSE.toml` or create a new `[[annotations]]` section (see `./REUSE.toml` for an example).
+
+## Running tests
+
+Unit tests are run with the Go toolchain and modules specified in `go.mod`.
+
+**First run:** If the Go version in `go.mod` is not yet installed, the first `go test` (or any `go` command) will download the toolchain and dependencies. This can take **2–5 minutes** depending on the network. If your IDE or test runner uses a short timeout (e.g. 30–60 seconds), the first run may time out; use a longer timeout for the first run or run from a terminal:
+
+```bash
+go test ./...
+```
+
+**Run only metrics (e.g. instance_info) tests:**
+
+```bash
+go test ./pkg/sparrow/metrics/ -run 'InstanceInfo' -v -count=1
+```
+
+**Run all tests with race detector and coverage (as in CI):**
+
+```bash
+go mod download
+go test --race --count=1 --coverprofile cover.out -v ./...
+```

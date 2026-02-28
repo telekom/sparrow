@@ -14,9 +14,16 @@ import (
 	"github.com/telekom/sparrow/pkg/api"
 )
 
+// Metadata holds arbitrary key-value metadata for the Sparrow instance.
+// Exposed via the sparrow_instance_info Prometheus metric labels.
+// Keys must be valid Prometheus label names.
+type Metadata map[string]string
+
 type Config struct {
 	// SparrowName is the DNS name of the sparrow
 	SparrowName string `yaml:"name" mapstructure:"name"`
+	// Metadata is optional instance metadata (exposed as sparrow_instance_info)
+	Metadata Metadata `yaml:"metadata" mapstructure:"metadata"`
 	// Loader is the configuration for the loader
 	Loader LoaderConfig `yaml:"loader" mapstructure:"loader"`
 	// Api is the configuration for the api server
