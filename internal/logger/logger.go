@@ -33,6 +33,7 @@ func NewLogger(h ...slog.Handler) *slog.Logger {
 // It embeds a logger into this new context.
 // It also returns a cancel function to cancel the new context.
 func NewContextWithLogger(parent context.Context) (context.Context, context.CancelFunc) {
+	//gosec:disable G118 -- This is a false positive, since it's the callers responsibility to call the cancel function
 	ctx, cancel := context.WithCancel(parent)
 	return IntoContext(ctx, FromContext(parent)), cancel
 }

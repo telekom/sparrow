@@ -219,7 +219,7 @@ func getHealth(ctx context.Context, client *http.Client, url string) error {
 		return err
 	}
 
-	resp, err := client.Do(req) //nolint:bodyclose // Closed in defer below
+	resp, err := client.Do(req) //nolint:bodyclose,gosec // Closed in defer below; URL is operator-configured
 	if err != nil {
 		log.Error("Error while requesting health", "error", err)
 		return err
