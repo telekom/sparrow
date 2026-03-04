@@ -28,14 +28,14 @@ jobs:
         with:
           go-version-file: go.mod
 
-      - uses: docker/login-action@v3
+      - uses: docker/login-action@v4
         name: Login to GHCR
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: docker/login-action@v3
+      - uses: docker/login-action@v4
         name: Login to MTR
         with:
           registry: mtr.devops.telekom.de
