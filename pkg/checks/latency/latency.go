@@ -230,7 +230,8 @@ func getLatency(ctx context.Context, c *http.Client, url string) (result, error)
 	}
 
 	start := time.Now()
-	resp, err := c.Do(req) //nolint:bodyclose // Closed in defer below
+	//nolint:bodyclose,gosec // Closed in defer below, and gosec g704 is not relevant because the url is parsed and validated in the config validation
+	resp, err := c.Do(req)
 	if err != nil {
 		log.Error("Error while checking latency", "error", err)
 		errval := err.Error()
