@@ -6,10 +6,10 @@ package metrics
 
 import (
 	"fmt"
-	"regexp"
 	"sort"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/common/model"
 )
 
 const (
@@ -41,7 +41,7 @@ func RegisterInstanceInfo(registry *prometheus.Registry, instanceName string, me
 		if k == "instance_name" {
 			return fmt.Errorf("metadata key %q is reserved", k)
 		}
-		if !isValidLabelName(k) {
+		if !model.UTF8Validation.IsValidLabelName(k) {
 			return fmt.Errorf("metadata key %q is not a valid Prometheus label name", k)
 		}
 		labels = append(labels, k)
@@ -57,10 +57,4 @@ func RegisterInstanceInfo(registry *prometheus.Registry, instanceName string, me
 	)
 	info.WithLabelValues(values...).Set(1)
 	return registry.Register(info)
-}
-
-var labelNamePattern = regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_]*$`)
-
-func isValidLabelName(name string) bool {
-	return labelNamePattern.MatchString(name)
 }

@@ -6,6 +6,7 @@ package metrics
 
 import (
 	"errors"
+	"maps"
 	"testing"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -28,27 +29,37 @@ func TestRegisterInstanceInfo(t *testing.T) {
 		t.Fatalf("Gather() error = %v", err)
 	}
 
-	var found bool
+	expectedLabels := map[string]string{
+		"instance_name": "sparrow.example.com",
+		"team_name":     "platform-team",
+		"team_email":    "platform@example.com",
+		"platform":      "k8s-prod-eu",
+	}
+
+	found := false
 	for _, mf := range metrics {
-		if mf.GetName() == instanceInfoMetricName {
-			found = true
-			if len(mf.GetMetric()) != 1 {
-				t.Errorf("expected 1 metric, got %d", len(mf.GetMetric()))
+		if mf.GetName() != instanceInfoMetricName {
+			continue
+		}
+		found = true
+
+		if len(mf.GetMetric()) != 1 {
+			t.Errorf("expected 1 metric, got %d", len(mf.GetMetric()))
+		}
+
+		const expectedValue = 1
+		for _, m := range mf.GetMetric() {
+			if m.GetGauge().GetValue() != expectedValue {
+				t.Errorf("%q metric value expected %d, got %f", instanceInfoMetricName, expectedValue, m.GetGauge().GetValue())
 			}
-			for _, m := range mf.GetMetric() {
-				if m.GetGauge().GetValue() != 1 {
-					t.Errorf("expected value 1, got %v", m.GetGauge().GetValue())
-				}
-				labels := make(map[string]string)
-				for _, lp := range m.GetLabel() {
-					labels[lp.GetName()] = lp.GetValue()
-				}
-				if labels["instance_name"] != "sparrow.example.com" || labels["team_name"] != "platform-team" ||
-					labels["team_email"] != "platform@example.com" || labels["platform"] != "k8s-prod-eu" {
-					t.Errorf("unexpected labels: %v", labels)
-				}
+
+			labels := make(map[string]string)
+			for _, lp := range m.GetLabel() {
+				labels[lp.GetName()] = lp.GetValue()
 			}
-			break
+			if !maps.Equal(expectedLabels, labels) {
+				t.Errorf("expected labels %v, got %v", expectedLabels, labels)
+			}
 		}
 	}
 	if !found {
@@ -69,21 +80,35 @@ func TestRegisterInstanceInfo_emptyMetadata(t *testing.T) {
 		t.Fatalf("Gather() error = %v", err)
 	}
 
+	expectedLabels := map[string]string{
+		"instance_name": "sparrow.example.com",
+	}
+
+	found := false
 	for _, mf := range metrics {
-		if mf.GetName() == instanceInfoMetricName {
-			for _, m := range mf.GetMetric() {
-				labels := make(map[string]string)
-				for _, lp := range m.GetLabel() {
-					labels[lp.GetName()] = lp.GetValue()
-				}
-				if labels["instance_name"] != "sparrow.example.com" {
-					t.Errorf("expected instance_name=sparrow.example.com, got %v", labels)
-				}
+		if mf.GetName() != instanceInfoMetricName {
+			continue
+		}
+		found = true
+
+		const expectedValue = 1
+		for _, m := range mf.GetMetric() {
+			if m.GetGauge().GetValue() != expectedValue {
+				t.Errorf("%q metric value expected %d, got %f", instanceInfoMetricName, expectedValue, m.GetGauge().GetValue())
 			}
-			return
+
+			labels := make(map[string]string)
+			for _, lp := range m.GetLabel() {
+				labels[lp.GetName()] = lp.GetValue()
+			}
+			if !maps.Equal(expectedLabels, labels) {
+				t.Errorf("expected labels %v, got %v", expectedLabels, labels)
+			}
 		}
 	}
-	t.Error("sparrow_instance_info metric not found")
+	if !found {
+		t.Error("sparrow_instance_info metric not found in registry")
+	}
 }
 
 func TestRegisterInstanceInfo_doubleRegistration(t *testing.T) {
@@ -128,19 +153,34 @@ func TestRegisterInstanceInfo_partialMetadata(t *testing.T) {
 		t.Fatalf("Gather() error = %v", err)
 	}
 
+	expectedLabels := map[string]string{
+		"instance_name": "sparrow.example.com",
+		"team_name":     "platform-team",
+	}
+
+	found := false
 	for _, mf := range metrics {
-		if mf.GetName() == instanceInfoMetricName {
-			for _, m := range mf.GetMetric() {
-				labels := make(map[string]string)
-				for _, lp := range m.GetLabel() {
-					labels[lp.GetName()] = lp.GetValue()
-				}
-				if labels["instance_name"] != "sparrow.example.com" || labels["team_name"] != "platform-team" {
-					t.Errorf("unexpected labels (expected partial metadata): %v", labels)
-				}
+		if mf.GetName() != instanceInfoMetricName {
+			continue
+		}
+		found = true
+
+		const expectedValue = 1
+		for _, m := range mf.GetMetric() {
+			if m.GetGauge().GetValue() != expectedValue {
+				t.Errorf("%q metric value expected %d, got %f", instanceInfoMetricName, expectedValue, m.GetGauge().GetValue())
 			}
-			return
+
+			labels := make(map[string]string)
+			for _, lp := range m.GetLabel() {
+				labels[lp.GetName()] = lp.GetValue()
+			}
+			if !maps.Equal(expectedLabels, labels) {
+				t.Errorf("expected labels %v, got %v", expectedLabels, labels)
+			}
 		}
 	}
-	t.Error("sparrow_instance_info metric not found")
+	if !found {
+		t.Error("sparrow_instance_info metric not found in registry")
+	}
 }

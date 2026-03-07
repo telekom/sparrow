@@ -10,7 +10,7 @@ SPDX-License-Identifier: CC-BY-4.0
 
 Sparrow exposes optional instance metadata via a dedicated Prometheus **info metric** (`sparrow_instance_info`), so operators can identify owners, route alerts correctly, and correlate metrics across multiple Sparrow deployments.
 
-## Why Option 1 (Dedicated Info Metric)
+## Why a Dedicated Info Metric
 
 - **Prometheus best practice:** Info-style metrics (gauge with value 1 and descriptive labels) are the standard way to expose static attributes (e.g. `kube_pod_info`, `node_uname_info`). They avoid polluting every time series with extra labels and keep cardinality under control.
 - **No impact on existing metrics:** We do **not** add metadata labels to check metrics (health, latency, DNS, traceroute). That would multiply cardinality and complicate existing dashboards. Joining with `sparrow_instance_info` in PromQL when needed is explicit and flexible.

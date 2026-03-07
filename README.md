@@ -23,6 +23,7 @@ SPDX-License-Identifier: CC-BY-4.0
   - [Image](#image)
 - [Configuration](#configuration)
   - [Startup](#startup)
+    - [Instance metadata (optional)](#instance-metadata-optional)
     - [Example Startup Configuration](#example-startup-configuration)
     - [Loader](#loader)
     - [Logging Configuration](#logging-configuration)
@@ -203,7 +204,7 @@ Just write out the path to the attribute, delimited by `_`.
 
 You can optionally configure instance metadata so operators can identify owners, route alerts, and correlate metrics across deployments. This metadata is exposed as a single Prometheus info-style metric, `sparrow_instance_info`, emitted once per instance at startup.
 
-`metadata` is a map of arbitrary key-value pairs. Keys must be valid Prometheus label names (e.g. `team_name`, `platform`, `region`, `environment`). The key `instance_name` is reserved and set automatically from the Sparrow DNS name.
+`metadata` is a map of arbitrary key-value pairs. Keys must be valid Prometheus label names (e.g. `team_name`, `platform`, `region`, `environment`). The key `instance_name` is reserved and automatically set to the sparrow's name.
 
 #### Example Startup Configuration
 
