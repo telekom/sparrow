@@ -6,15 +6,17 @@ package metrics
 
 import (
 	"fmt"
-	"sort"
+	"maps"
+	"slices"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/model"
 )
 
 const (
-	instanceInfoMetricName = "sparrow_instance_info"
-	instanceInfoHelp       = "Ownership and platform metadata for this Sparrow instance. Emitted once per instance for alert routing and multi-team correlation."
+	instanceInfoMetric = "sparrow_instance_info"
+	instanceInfoHelp   = "Ownership and platform metadata for this Sparrow instance. Emitted once per instance for alert routing and multi-team correlation."
+	instanceNameLabel  = "instance_name"
 )
 
 // RegisterInstanceInfo registers the sparrow_instance_info info-style metric on the given registry.
@@ -26,31 +28,26 @@ func RegisterInstanceInfo(registry *prometheus.Registry, instanceName string, me
 		metadata = map[string]string{}
 	}
 
-	keys := make([]string, 0, len(metadata))
-	for k := range metadata {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-
-	labels := make([]string, 0, len(keys)+1)
-	values := make([]string, 0, len(keys)+1)
-	labels = append(labels, "instance_name")
+	labels := make([]string, 0, len(metadata)+1)
+	values := make([]string, 0, len(metadata)+1)
+	labels = append(labels, instanceNameLabel)
 	values = append(values, instanceName)
 
-	for _, k := range keys {
-		if k == "instance_name" {
-			return fmt.Errorf("metadata key %q is reserved", k)
+	keys := slices.Collect(maps.Keys(metadata))
+	for _, label := range keys {
+		if label == instanceNameLabel {
+			return fmt.Errorf("metadata key %q is reserved", label)
 		}
-		if !model.UTF8Validation.IsValidLabelName(k) {
-			return fmt.Errorf("metadata key %q is not a valid Prometheus label name", k)
+		if !model.UTF8Validation.IsValidLabelName(label) {
+			return fmt.Errorf("metadata key %q is not a valid Prometheus label name", label)
 		}
-		labels = append(labels, k)
-		values = append(values, metadata[k])
+		labels = append(labels, label)
+		values = append(values, metadata[label])
 	}
 
 	info := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: instanceInfoMetricName,
+			Name: instanceInfoMetric,
 			Help: instanceInfoHelp,
 		},
 		labels,

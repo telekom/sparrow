@@ -45,6 +45,7 @@ SPDX-License-Identifier: CC-BY-4.0
     - [Traceroute API Metrics](#traceroute-api-metrics)
 - [API](#api)
 - [Metrics, Telemetry \& Dashboards](#metrics-telemetry--dashboards)
+  - [Instance info metric](#instance-info-metric)
   - [Prometheus Integration](#prometheus-integration)
   - [Traces](#traces)
   - [Grafana Dashboards](#grafana-dashboards)
@@ -480,8 +481,9 @@ latency:
   - Labelled with `target`
 
 ### Check: DNS
+
 > [!CAUTION]
-> **Breaking Change:** Starting from version `v0.6.0`, the API returns lowercase keys instead of capitalized keys. Ensure that your code handles this change to avoid issues. 
+> **Breaking Change:** Starting from version `v0.6.0`, the API returns lowercase keys instead of capitalized keys. Ensure that your code handles this change to avoid issues.
 
 Available configuration options:
 
@@ -734,9 +736,10 @@ Since [OTLP](https://opentelemetry.io/docs/specs/otlp/) is a standard protocol, 
 
 ### Grafana Dashboards
 
-A sample Grafana dashboard to visualize the metrics collected by the checks is available in the `examples` directory of the repository. How to import dashboards into Grafana is documented [here](https://grafana.com/docs/grafana/latest/reference/export_import/).
+A sample Grafana dashboard to visualize the metrics collected by the checks is available in the `examples` directory of the repository.
+How to import dashboards into Grafana is documented in the [Grafana documentation](https://grafana.com/docs/grafana/latest/reference/export_import/).
 
-<img src="examples/dashboard.png">
+![Example Grafana Dashboard](examples/dashboard.png)
 
 ## Code of Conduct
 
@@ -774,5 +777,5 @@ participating in this project, you agree to abide by its [Code of Conduct](./COD
 ## Licensing
 
 This project follows the [REUSE standard for software licensing](https://reuse.software/).
-Each file contains copyright and license information, and license texts can be found in the [./LICENSES](./LICENSES) folder. For more information visit https://reuse.software/.
+Each file contains copyright and license information, and license texts can be found in the [./LICENSES](./LICENSES) folder. For more information visit <https://reuse.software/>.
 You can find a guide for developers at [Reuse Template Docs](https://telekom.github.io/reuse-template/).

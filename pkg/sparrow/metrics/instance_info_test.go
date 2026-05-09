@@ -5,11 +5,12 @@
 package metrics
 
 import (
-	"errors"
-	"maps"
 	"testing"
 
 	"github.com/prometheus/client_golang/prometheus"
+	io_prometheus_client "github.com/prometheus/client_model/go"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestRegisterInstanceInfo(t *testing.T) {
@@ -20,95 +21,35 @@ func TestRegisterInstanceInfo(t *testing.T) {
 		"team_email": "platform@example.com",
 		"platform":   "k8s-prod-eu",
 	})
-	if err != nil {
-		t.Fatalf("RegisterInstanceInfo() error = %v", err)
-	}
+	require.NoError(t, err, "RegisterInstanceInfo() should succeed")
 
 	metrics, err := registry.Gather()
-	if err != nil {
-		t.Fatalf("Gather() error = %v", err)
-	}
+	require.NoError(t, err, "Gather() should succeed")
 
-	expectedLabels := map[string]string{
+	wantLabels := map[string]string{
 		"instance_name": "sparrow.example.com",
 		"team_name":     "platform-team",
 		"team_email":    "platform@example.com",
 		"platform":      "k8s-prod-eu",
 	}
 
-	found := false
-	for _, mf := range metrics {
-		if mf.GetName() != instanceInfoMetricName {
-			continue
-		}
-		found = true
-
-		if len(mf.GetMetric()) != 1 {
-			t.Errorf("expected 1 metric, got %d", len(mf.GetMetric()))
-		}
-
-		const expectedValue = 1
-		for _, m := range mf.GetMetric() {
-			if m.GetGauge().GetValue() != expectedValue {
-				t.Errorf("%q metric value expected %d, got %f", instanceInfoMetricName, expectedValue, m.GetGauge().GetValue())
-			}
-
-			labels := make(map[string]string)
-			for _, lp := range m.GetLabel() {
-				labels[lp.GetName()] = lp.GetValue()
-			}
-			if !maps.Equal(expectedLabels, labels) {
-				t.Errorf("expected labels %v, got %v", expectedLabels, labels)
-			}
-		}
-	}
-	if !found {
-		t.Error("sparrow_instance_info metric not found in registry")
-	}
+	assertMetricsContainLabels(t, metrics, wantLabels)
 }
 
 func TestRegisterInstanceInfo_emptyMetadata(t *testing.T) {
 	registry := prometheus.NewRegistry()
 
 	err := RegisterInstanceInfo(registry, "sparrow.example.com", nil)
-	if err != nil {
-		t.Fatalf("RegisterInstanceInfo() with empty metadata error = %v", err)
-	}
+	require.NoError(t, err, "RegisterInstanceInfo() with nil metadata should succeed")
 
 	metrics, err := registry.Gather()
-	if err != nil {
-		t.Fatalf("Gather() error = %v", err)
-	}
+	require.NoError(t, err, "Gather() should succeed")
 
-	expectedLabels := map[string]string{
+	wantLabels := map[string]string{
 		"instance_name": "sparrow.example.com",
 	}
 
-	found := false
-	for _, mf := range metrics {
-		if mf.GetName() != instanceInfoMetricName {
-			continue
-		}
-		found = true
-
-		const expectedValue = 1
-		for _, m := range mf.GetMetric() {
-			if m.GetGauge().GetValue() != expectedValue {
-				t.Errorf("%q metric value expected %d, got %f", instanceInfoMetricName, expectedValue, m.GetGauge().GetValue())
-			}
-
-			labels := make(map[string]string)
-			for _, lp := range m.GetLabel() {
-				labels[lp.GetName()] = lp.GetValue()
-			}
-			if !maps.Equal(expectedLabels, labels) {
-				t.Errorf("expected labels %v, got %v", expectedLabels, labels)
-			}
-		}
-	}
-	if !found {
-		t.Error("sparrow_instance_info metric not found in registry")
-	}
+	assertMetricsContainLabels(t, metrics, wantLabels)
 }
 
 func TestRegisterInstanceInfo_doubleRegistration(t *testing.T) {
@@ -119,23 +60,16 @@ func TestRegisterInstanceInfo_doubleRegistration(t *testing.T) {
 		"team_email": "team-a@example.com",
 		"platform":   "k8s-prod",
 	})
-	if err != nil {
-		t.Fatalf("first RegisterInstanceInfo() error = %v", err)
-	}
+	require.NoError(t, err, "first RegisterInstanceInfo() should succeed")
 
 	err2 := RegisterInstanceInfo(registry, "other.example.com", map[string]string{
 		"team_name":  "team-b",
 		"team_email": "team-b@example.com",
 		"platform":   "k8s-staging",
 	})
-	if err2 == nil {
-		t.Fatal("expected second RegisterInstanceInfo to return an error (duplicate collector)")
-	}
+	require.Error(t, err2, "second RegisterInstanceInfo() should return an error due to duplicate collector")
 
-	var alreadyErr prometheus.AlreadyRegisteredError
-	if !errors.As(err2, &alreadyErr) {
-		t.Errorf("expected AlreadyRegisteredError, got %T: %v", err2, err2)
-	}
+	assert.ErrorAs(t, err2, &prometheus.AlreadyRegisteredError{}, "expected an AlreadyRegisteredError")
 }
 
 func TestRegisterInstanceInfo_partialMetadata(t *testing.T) {
@@ -144,43 +78,40 @@ func TestRegisterInstanceInfo_partialMetadata(t *testing.T) {
 	err := RegisterInstanceInfo(registry, "sparrow.example.com", map[string]string{
 		"team_name": "platform-team",
 	})
-	if err != nil {
-		t.Fatalf("RegisterInstanceInfo() with partial metadata error = %v", err)
-	}
+	require.NoError(t, err, "RegisterInstanceInfo() with partial metadata should succeed")
 
 	metrics, err := registry.Gather()
-	if err != nil {
-		t.Fatalf("Gather() error = %v", err)
-	}
+	require.NoError(t, err, "Gather() should succeed")
 
-	expectedLabels := map[string]string{
+	wantLabels := map[string]string{
 		"instance_name": "sparrow.example.com",
 		"team_name":     "platform-team",
 	}
 
+	assertMetricsContainLabels(t, metrics, wantLabels)
+}
+
+func assertMetricsContainLabels(t *testing.T, metrics []*io_prometheus_client.MetricFamily, wantLabels map[string]string) {
+	t.Helper()
 	found := false
 	for _, mf := range metrics {
-		if mf.GetName() != instanceInfoMetricName {
+		if mf.GetName() != instanceInfoMetric {
 			continue
 		}
 		found = true
 
-		const expectedValue = 1
+		assert.Len(t, mf.GetMetric(), 1, "expected exactly one metric")
+
+		const wantVal = 1
 		for _, m := range mf.GetMetric() {
-			if m.GetGauge().GetValue() != expectedValue {
-				t.Errorf("%q metric value expected %d, got %f", instanceInfoMetricName, expectedValue, m.GetGauge().GetValue())
-			}
+			assert.Equal(t, wantVal, m.GetGauge().GetValue(), "%q metric value expected %d", instanceInfoMetric, wantVal)
 
 			labels := make(map[string]string)
 			for _, lp := range m.GetLabel() {
 				labels[lp.GetName()] = lp.GetValue()
 			}
-			if !maps.Equal(expectedLabels, labels) {
-				t.Errorf("expected labels %v, got %v", expectedLabels, labels)
-			}
+			assert.Equal(t, wantLabels, labels, "want labels %v", wantLabels)
 		}
 	}
-	if !found {
-		t.Error("sparrow_instance_info metric not found in registry")
-	}
+	assert.True(t, found, "sparrow_instance_info metric not found in registry")
 }
