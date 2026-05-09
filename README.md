@@ -23,6 +23,7 @@ SPDX-License-Identifier: CC-BY-4.0
   - [Image](#image)
 - [Configuration](#configuration)
   - [Startup](#startup)
+    - [Instance metadata (optional)](#instance-metadata-optional)
     - [Example Startup Configuration](#example-startup-configuration)
     - [Loader](#loader)
     - [Logging Configuration](#logging-configuration)
@@ -44,6 +45,7 @@ SPDX-License-Identifier: CC-BY-4.0
     - [Traceroute API Metrics](#traceroute-api-metrics)
 - [API](#api)
 - [Metrics, Telemetry \& Dashboards](#metrics-telemetry--dashboards)
+  - [Instance info metric](#instance-info-metric)
   - [Prometheus Integration](#prometheus-integration)
   - [Traces](#traces)
   - [Grafana Dashboards](#grafana-dashboards)
@@ -124,8 +126,8 @@ ConfigMap.
 Use the following configuration values to use a runtime configuration by the `http` loader:
 
 ```yaml
-startupConfig:
-  ...
+sparrowConfig:
+  name: sparrow.example.com
   loader:
     type: http
     interval: 30s
@@ -199,11 +201,25 @@ export SPARROW_ANY_OTHER_OPTION="Some value"
 
 Just write out the path to the attribute, delimited by `_`.
 
+#### Instance metadata (optional)
+
+You can optionally configure instance metadata so operators can identify owners, route alerts, and correlate metrics across deployments. This metadata is exposed as a single Prometheus info-style metric, `sparrow_instance_info`, emitted once per instance at startup.
+
+`metadata` is a map of arbitrary key-value pairs. Keys must be valid Prometheus label names (e.g. `team_name`, `platform`, `region`, `environment`). The key `instance_name` is reserved and automatically set to the sparrow's name.
+
 #### Example Startup Configuration
 
 ```yaml
 # DNS sparrow is exposed on 
 name: sparrow.example.com
+
+# Optional: instance metadata (exposed as sparrow_instance_info Prometheus metric)
+# Used for alert routing and correlating metrics across deployments.
+# metadata:
+#   team_name: platform-team
+#   team_email: platform@example.com
+#   platform: k8s-prod-eu
+#   region: eu-west-1
 
 # Selects and configures a loader to continuously fetch the checks' configuration at runtime
 loader:
@@ -465,8 +481,9 @@ latency:
   - Labelled with `target`
 
 ### Check: DNS
+
 > [!CAUTION]
-> **Breaking Change:** Starting from version `v0.6.0`, the API returns lowercase keys instead of capitalized keys. Ensure that your code handles this change to avoid issues. 
+> **Breaking Change:** Starting from version `v0.6.0`, the API returns lowercase keys instead of capitalized keys. Ensure that your code handles this change to avoid issues.
 
 Available configuration options:
 
@@ -642,6 +659,27 @@ at `/v1/metrics/{check-name}`. The API's definition is available at `/openapi`.
 
 The `sparrow` provides a `/metrics` endpoint to expose application metrics. In addition to runtime information, the sparrow provides specific metrics for each check. Refer to the [Checks](#checks) section for more detailed information.
 
+### Instance info metric
+
+- `sparrow_instance_info`
+  - Type: Gauge (info-style, value always 1)
+  - Description: Instance metadata for this Sparrow instance. Emitted once per instance at startup.
+  - Labels: `instance_name` plus any user-defined metadata keys
+  - Use for: Alert routing, identifying instance owners, correlating metrics across multiple Sparrow deployments.
+
+Example PromQL for multi-team dashboards:
+
+```promql
+# All Sparrow instances with their owner and platform
+sparrow_instance_info
+
+# Instances by team
+sparrow_instance_info{team_name="platform-team"}
+
+# Join check metrics with ownership (e.g. health by team)
+sparrow_health_up * on(instance) group_left(team_name, team_email, platform) sparrow_instance_info
+```
+
 ### Prometheus Integration
 
 The `sparrow` metrics API is designed to be compatible with Prometheus. To integrate `sparrow` with Prometheus, add the following scrape configuration to your Prometheus configuration file:
@@ -698,9 +736,10 @@ Since [OTLP](https://opentelemetry.io/docs/specs/otlp/) is a standard protocol, 
 
 ### Grafana Dashboards
 
-A sample Grafana dashboard to visualize the metrics collected by the checks is available in the `examples` directory of the repository. How to import dashboards into Grafana is documented [here](https://grafana.com/docs/grafana/latest/reference/export_import/).
+A sample Grafana dashboard to visualize the metrics collected by the checks is available in the `examples` directory of the repository.
+How to import dashboards into Grafana is documented in the [Grafana documentation](https://grafana.com/docs/grafana/latest/reference/export_import/).
 
-<img src="examples/dashboard.png">
+![Example Grafana Dashboard](examples/dashboard.png)
 
 ## Code of Conduct
 
@@ -738,5 +777,5 @@ participating in this project, you agree to abide by its [Code of Conduct](./COD
 ## Licensing
 
 This project follows the [REUSE standard for software licensing](https://reuse.software/).
-Each file contains copyright and license information, and license texts can be found in the [./LICENSES](./LICENSES) folder. For more information visit https://reuse.software/.
+Each file contains copyright and license information, and license texts can be found in the [./LICENSES](./LICENSES) folder. For more information visit <https://reuse.software/>.
 You can find a guide for developers at [Reuse Template Docs](https://telekom.github.io/reuse-template/).
