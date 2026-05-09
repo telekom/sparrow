@@ -25,7 +25,7 @@ type Loader interface {
 // NewLoader Get a new typed runtime configuration loader
 func NewLoader(cfg *Config, cRuntime chan<- runtime.Config) Loader {
 	switch cfg.Loader.Type {
-	case "http":
+	case loaderHTTP:
 		return NewHttpLoader(cfg, cRuntime)
 	default:
 		return NewFileLoader(cfg, cRuntime)

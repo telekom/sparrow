@@ -42,7 +42,7 @@ func TestFileLoader_Run(t *testing.T) {
 		{
 			name: "Loads config from file",
 			config: LoaderConfig{
-				Type:     "file",
+				Type:     loaderFile,
 				Interval: 1 * time.Second,
 				File: FileLoaderConfig{
 					Path: "test/data/config.yaml",
@@ -60,7 +60,7 @@ func TestFileLoader_Run(t *testing.T) {
 		{
 			name: "Continuous loading disabled",
 			config: LoaderConfig{
-				Type:     "file",
+				Type:     loaderFile,
 				Interval: 0,
 				File: FileLoaderConfig{
 					Path: "test/data/config.yaml",
@@ -115,7 +115,7 @@ func TestFileLoader_getRuntimeConfig(t *testing.T) {
 		{
 			name: "Invalid File Path",
 			config: LoaderConfig{
-				Type:     "file",
+				Type:     loaderFile,
 				Interval: 1 * time.Second,
 				File: FileLoaderConfig{
 					Path: "test/data/nonexistent.yaml",
@@ -126,7 +126,7 @@ func TestFileLoader_getRuntimeConfig(t *testing.T) {
 		{
 			name: "Malformed Config File",
 			config: LoaderConfig{
-				Type:     "file",
+				Type:     loaderFile,
 				Interval: 1 * time.Second,
 				File: FileLoaderConfig{
 					Path: "test/data/malformed.yaml",
@@ -145,7 +145,7 @@ func TestFileLoader_getRuntimeConfig(t *testing.T) {
 		{
 			name: "Failed to close file",
 			config: LoaderConfig{
-				Type:     "file",
+				Type:     loaderFile,
 				Interval: 1 * time.Second,
 				File: FileLoaderConfig{
 					Path: "test/data/valid.yaml",
@@ -153,7 +153,7 @@ func TestFileLoader_getRuntimeConfig(t *testing.T) {
 			},
 			mockFS: func(t *testing.T) fs.FS {
 				b, err := yaml.Marshal(LoaderConfig{
-					Type:     "file",
+					Type:     loaderFile,
 					Interval: 1 * time.Second,
 					File: FileLoaderConfig{
 						Path: "test/data/valid.yaml",
@@ -179,7 +179,7 @@ func TestFileLoader_getRuntimeConfig(t *testing.T) {
 		{
 			name: "Malformed config file and failed to close file",
 			config: LoaderConfig{
-				Type:     "file",
+				Type:     loaderFile,
 				Interval: 1 * time.Second,
 				File: FileLoaderConfig{
 					Path: "test/data/malformed.yaml",

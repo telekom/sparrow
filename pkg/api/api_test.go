@@ -42,7 +42,7 @@ func TestAPI_Run(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctx := context.Background()
+			ctx := t.Context()
 			a := api{
 				server: &http.Server{Addr: ":8080"}, //nolint:gosec // irrelevant
 				router: chi.NewRouter(),
@@ -59,7 +59,7 @@ func TestAPI_Run(t *testing.T) {
 			}()
 			time.Sleep(10 * time.Millisecond)
 			if !tt.wantErr {
-				req := httptest.NewRequest(tt.want.method, tt.want.path, http.NoBody)
+				req := httptest.NewRequestWithContext(ctx, tt.want.method, tt.want.path, http.NoBody)
 				rec := httptest.NewRecorder()
 				a.router.ServeHTTP(rec, req)
 
@@ -167,7 +167,7 @@ func TestAPI_RegisterRoutes(t *testing.T) {
 
 			if !tt.wantErr {
 				for _, req := range tt.want {
-					request := httptest.NewRequest(req.method, req.path, http.NoBody)
+					request := httptest.NewRequestWithContext(t.Context(), req.method, req.path, http.NoBody)
 					recorder := httptest.NewRecorder()
 
 					a.router.ServeHTTP(recorder, request)

@@ -29,7 +29,7 @@ func TestConfig_Validate(t *testing.T) {
 					ListeningAddress: ":8080",
 				},
 				Loader: LoaderConfig{
-					Type: "http",
+					Type: loaderHTTP,
 					Http: HttpLoaderConfig{
 						Url:     "https://test.de/config",
 						Timeout: time.Second,
@@ -52,7 +52,7 @@ func TestConfig_Validate(t *testing.T) {
 				},
 				SparrowName: "sparrow.com",
 				Loader: LoaderConfig{
-					Type: "http",
+					Type: loaderHTTP,
 					Http: HttpLoaderConfig{
 						Url:     "",
 						Timeout: time.Second,
@@ -75,7 +75,7 @@ func TestConfig_Validate(t *testing.T) {
 				},
 				SparrowName: "sparrow.com",
 				Loader: LoaderConfig{
-					Type: "http",
+					Type: loaderHTTP,
 					Http: HttpLoaderConfig{
 						Url:     "this is not a valid url",
 						Timeout: time.Second,
@@ -97,7 +97,7 @@ func TestConfig_Validate(t *testing.T) {
 				},
 				SparrowName: "sparrow.com",
 				Loader: LoaderConfig{
-					Type: "http",
+					Type: loaderHTTP,
 					Http: HttpLoaderConfig{
 						Url:     "test.de",
 						Timeout: time.Minute,
@@ -119,7 +119,7 @@ func TestConfig_Validate(t *testing.T) {
 				},
 				SparrowName: "sparrow.com",
 				Loader: LoaderConfig{
-					Type: "file",
+					Type: loaderFile,
 					File: FileLoaderConfig{
 						Path: "",
 					},
@@ -136,7 +136,7 @@ func TestConfig_Validate(t *testing.T) {
 				},
 				SparrowName: "sparrow.com",
 				Loader: LoaderConfig{
-					Type: "file",
+					Type: loaderFile,
 					File: FileLoaderConfig{
 						Path: "",
 					},

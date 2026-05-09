@@ -22,9 +22,7 @@ func newMetrics() metrics {
 				Name: "sparrow_health_up",
 				Help: "Health of targets",
 			},
-			[]string{
-				"target",
-			},
+			[]string{checks.LabelTarget},
 		),
 	}
 }

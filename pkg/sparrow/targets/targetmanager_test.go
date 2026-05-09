@@ -25,7 +25,7 @@ func TestTargetManagerConfig_Validate(t *testing.T) {
 			cfg: TargetManagerConfig{
 				Type: "gitlab",
 				General: General{
-					Scheme:               "http",
+					Scheme:               schemeHTTP,
 					UnhealthyThreshold:   1 * time.Second,
 					CheckInterval:        1 * time.Second,
 					RegistrationInterval: 1 * time.Second,
@@ -38,7 +38,7 @@ func TestTargetManagerConfig_Validate(t *testing.T) {
 			cfg: TargetManagerConfig{
 				Type: "gitlab",
 				General: General{
-					Scheme:               "http",
+					Scheme:               schemeHTTP,
 					UnhealthyThreshold:   0,
 					CheckInterval:        1 * time.Second,
 					RegistrationInterval: 0,
@@ -51,7 +51,7 @@ func TestTargetManagerConfig_Validate(t *testing.T) {
 			cfg: TargetManagerConfig{
 				Type: "gitlab",
 				General: General{
-					Scheme:               "http",
+					Scheme:               schemeHTTP,
 					UnhealthyThreshold:   1 * time.Second,
 					CheckInterval:        0,
 					RegistrationInterval: 1 * time.Second,
@@ -65,7 +65,7 @@ func TestTargetManagerConfig_Validate(t *testing.T) {
 			cfg: TargetManagerConfig{
 				Type: "gitlab",
 				General: General{
-					Scheme:               "http",
+					Scheme:               schemeHTTP,
 					UnhealthyThreshold:   -1 * time.Second,
 					CheckInterval:        1 * time.Second,
 					RegistrationInterval: 1 * time.Second,
@@ -79,7 +79,7 @@ func TestTargetManagerConfig_Validate(t *testing.T) {
 			cfg: TargetManagerConfig{
 				Type: "unknown",
 				General: General{
-					Scheme:               "http",
+					Scheme:               schemeHTTP,
 					UnhealthyThreshold:   1 * time.Second,
 					CheckInterval:        1 * time.Second,
 					RegistrationInterval: 1 * time.Second,
@@ -120,7 +120,7 @@ func TestTargetManagerConfig_Validate(t *testing.T) {
 			cfg: TargetManagerConfig{
 				Type: "gitlab",
 				General: General{
-					Scheme:               "http",
+					Scheme:               schemeHTTP,
 					UnhealthyThreshold:   1 * time.Second,
 					CheckInterval:        1 * time.Second,
 					RegistrationInterval: 1 * time.Second,
@@ -134,7 +134,7 @@ func TestTargetManagerConfig_Validate(t *testing.T) {
 			cfg: TargetManagerConfig{
 				Type: "gitlab",
 				General: General{
-					Scheme:               "https",
+					Scheme:               schemeHTTPS,
 					UnhealthyThreshold:   1 * time.Second,
 					CheckInterval:        1 * time.Second,
 					RegistrationInterval: 1 * time.Second,

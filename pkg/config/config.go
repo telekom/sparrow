@@ -34,9 +34,16 @@ type Config struct {
 	Telemetry metrics.Config `yaml:"telemetry" mapstructure:"telemetry"`
 }
 
+type LoaderType string
+
+const (
+	loaderHTTP LoaderType = "http"
+	loaderFile LoaderType = "file"
+)
+
 // LoaderConfig is the configuration for loader
 type LoaderConfig struct {
-	Type     string           `yaml:"type" mapstructure:"type"`
+	Type     LoaderType       `yaml:"type" mapstructure:"type"`
 	Interval time.Duration    `yaml:"interval" mapstructure:"interval"`
 	Http     HttpLoaderConfig `yaml:"http" mapstructure:"http"`
 	File     FileLoaderConfig `yaml:"file" mapstructure:"file"`

@@ -14,6 +14,9 @@ import (
 	"github.com/telekom/sparrow/internal/helper"
 )
 
+// LabelTarget is the name of the label used by checks for the target of a check run
+const LabelTarget = "target"
+
 // DefaultRetry provides a default configuration for the retry mechanism
 var DefaultRetry = helper.RetryConfig{
 	Count: 3,

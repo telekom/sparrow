@@ -158,7 +158,7 @@ func TestMiddleware(t *testing.T) {
 				}
 			})
 
-			req := httptest.NewRequest("GET", "/", http.NoBody)
+			req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/", http.NoBody)
 			w := httptest.NewRecorder()
 
 			middleware(handler).ServeHTTP(w, req)
@@ -181,19 +181,19 @@ func TestNewHandler(t *testing.T) {
 		},
 		{
 			name:      "Text handler with custom log level",
-			format:    "TEXT",
-			level:     "DEBUG",
+			format:    formatText,
+			level:     levelDebug,
 			wantLevel: slog.LevelDebug,
 		},
 		{
 			name:      "JSON handler with custom log level",
-			format:    "JSON",
-			level:     "WARN",
+			format:    formatJSON,
+			level:     levelWarn,
 			wantLevel: slog.LevelWarn,
 		},
 		{
 			name:      "Invalid log level",
-			format:    "TEXT",
+			format:    formatText,
 			level:     "UNKNOWN",
 			wantLevel: slog.LevelInfo,
 		},
@@ -206,7 +206,7 @@ func TestNewHandler(t *testing.T) {
 
 			handler := newHandler()
 
-			if tt.format == "TEXT" {
+			if tt.format == formatText {
 				if _, ok := handler.(*slog.TextHandler); !ok {
 					t.Errorf("Expected handler to be of type *log.Logger")
 				}
@@ -216,7 +216,7 @@ func TestNewHandler(t *testing.T) {
 				}
 			}
 
-			ok := handler.Enabled(context.Background(), tt.wantLevel)
+			ok := handler.Enabled(t.Context(), tt.wantLevel)
 			if !ok {
 				t.Errorf("Expected log level: %v", tt.wantLevel)
 			}
@@ -231,11 +231,11 @@ func TestGetLevel(t *testing.T) {
 		want  slog.Level
 	}{
 		{"Empty string", "", slog.LevelInfo},
-		{"Debug level", "DEBUG", slog.LevelDebug},
-		{"Info level", "INFO", slog.LevelInfo},
-		{"Warn level", "WARN", slog.LevelWarn},
+		{"Debug level", levelDebug, slog.LevelDebug},
+		{"Info level", levelInfo, slog.LevelInfo},
+		{"Warn level", levelWarn, slog.LevelWarn},
 		{"Warning level", "WARNING", slog.LevelWarn},
-		{"Error level", "ERROR", slog.LevelError},
+		{"Error level", levelError, slog.LevelError},
 		{"Invalid level", "UNKNOWN", slog.LevelInfo},
 	}
 

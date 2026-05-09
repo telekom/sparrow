@@ -62,7 +62,7 @@ func (c *LoaderConfig) Validate(ctx context.Context) error {
 	}
 
 	switch c.Type {
-	case "http":
+	case loaderHTTP:
 		if _, err := url.ParseRequestURI(c.Http.Url); err != nil {
 			log.Error("The loader http url is not a valid url")
 			return ErrInvalidLoaderHttpURL
@@ -71,7 +71,7 @@ func (c *LoaderConfig) Validate(ctx context.Context) error {
 			log.Error("The amount of loader http retries should be above 0 and below 6", "retryCount", c.Http.RetryCfg.Count)
 			return ErrInvalidLoaderHttpRetryCount
 		}
-	case "file":
+	case loaderFile:
 		if c.File.Path == "" {
 			log.Error("The loader file path cannot be empty")
 			return ErrInvalidLoaderFilePath
