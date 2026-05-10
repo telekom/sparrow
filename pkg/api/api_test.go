@@ -52,10 +52,9 @@ func TestAPI_Run(t *testing.T) {
 				t.Fatalf("Failed to register routes: %v", err)
 			}
 
+			errCh := make(chan error, 1)
 			go func() {
-				if err := a.Run(ctx); (err != nil) != tt.wantErr {
-					t.Errorf("Run() error = %v, wantErr %v", err, tt.wantErr)
-				}
+				errCh <- a.Run(ctx)
 			}()
 			time.Sleep(10 * time.Millisecond)
 			if !tt.wantErr {
@@ -70,12 +69,15 @@ func TestAPI_Run(t *testing.T) {
 				defer func() {
 					err := rec.Result().Body.Close()
 					if err != nil {
-						t.Fatalf("Failed to close recoder body")
+						t.Fatalf("Failed to close recorder body")
 					}
 				}()
 				if err := a.Shutdown(ctx); err != nil {
 					t.Fatalf("Failed to shutdown api: %v", err)
 				}
+			}
+			if err := <-errCh; (err != nil) != tt.wantErr {
+				t.Errorf("Run() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
