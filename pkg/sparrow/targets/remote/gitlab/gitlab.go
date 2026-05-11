@@ -105,7 +105,8 @@ func (c *client) fetchFile(ctx context.Context, f string) (checks.GlobalTarget, 
 		log.ErrorContext(ctx, "Could not parse GitLab API file URL", "url", u, "error", err)
 		return res, err
 	}
-	req, err := http.NewRequestWithContext(ctx,
+	req, err := http.NewRequestWithContext(
+		ctx,
 		http.MethodGet,
 		u.String(),
 		http.NoBody,
@@ -120,7 +121,7 @@ func (c *client) fetchFile(ctx context.Context, f string) (checks.GlobalTarget, 
 	query.Add("ref", c.config.Branch)
 	req.URL.RawQuery = query.Encode()
 
-	resp, err := c.client.Do(req) //nolint:gosec // URL is operator-configured GitLab base URL
+	resp, err := c.client.Do(req)
 	if err != nil {
 		log.ErrorContext(ctx, "Failed to fetch file", "error", err)
 		return res, err
@@ -186,7 +187,7 @@ func (c *client) fetchNextFileList(ctx context.Context, reqUrl string) ([]string
 	req.Header.Add("PRIVATE-TOKEN", c.config.Token)
 	req.Header.Add("Content-Type", "application/json")
 
-	resp, err := c.client.Do(req) //nolint:gosec // URL is operator-configured GitLab base URL
+	resp, err := c.client.Do(req)
 	if err != nil {
 		log.ErrorContext(ctx, "Failed to fetch file list", "error", err)
 		return nil, err
@@ -241,7 +242,8 @@ func (c *client) PutFile(ctx context.Context, file remote.File) error { //nolint
 		log.ErrorContext(ctx, "Failed to create request", "error", err)
 		return err
 	}
-	req, err := http.NewRequestWithContext(ctx,
+	req, err := http.NewRequestWithContext(
+		ctx,
 		http.MethodPut,
 		fmt.Sprintf("%s/api/v4/projects/%d/repository/files/%s", c.config.BaseURL, c.config.ProjectID, n),
 		bytes.NewBuffer(b),
@@ -254,7 +256,7 @@ func (c *client) PutFile(ctx context.Context, file remote.File) error { //nolint
 	req.Header.Add("PRIVATE-TOKEN", c.config.Token)
 	req.Header.Add("Content-Type", "application/json")
 
-	resp, err := c.client.Do(req) //nolint:gosec // URL is operator-configured GitLab base URL
+	resp, err := c.client.Do(req)
 	if err != nil {
 		log.ErrorContext(ctx, "Failed to push registration file", "error", err)
 		return err
@@ -285,7 +287,8 @@ func (c *client) PostFile(ctx context.Context, file remote.File) error { //nolin
 		log.ErrorContext(ctx, "Failed to create request", "error", err)
 		return err
 	}
-	req, err := http.NewRequestWithContext(ctx,
+	req, err := http.NewRequestWithContext(
+		ctx,
 		http.MethodPost,
 		fmt.Sprintf("%s/api/v4/projects/%d/repository/files/%s", c.config.BaseURL, c.config.ProjectID, n),
 		bytes.NewBuffer(b),
@@ -298,7 +301,7 @@ func (c *client) PostFile(ctx context.Context, file remote.File) error { //nolin
 	req.Header.Add("PRIVATE-TOKEN", c.config.Token)
 	req.Header.Add("Content-Type", "application/json")
 
-	resp, err := c.client.Do(req) //nolint:gosec // URL is operator-configured GitLab base URL
+	resp, err := c.client.Do(req)
 	if err != nil {
 		log.ErrorContext(ctx, "Failed to post file", "error", err)
 		return err
@@ -332,7 +335,8 @@ func (c *client) DeleteFile(ctx context.Context, file remote.File) error { //nol
 		return err
 	}
 
-	req, err := http.NewRequestWithContext(ctx,
+	req, err := http.NewRequestWithContext(
+		ctx,
 		http.MethodDelete,
 		fmt.Sprintf("%s/api/v4/projects/%d/repository/files/%s", c.config.BaseURL, c.config.ProjectID, n),
 		bytes.NewBuffer(b),
@@ -345,7 +349,7 @@ func (c *client) DeleteFile(ctx context.Context, file remote.File) error { //nol
 	req.Header.Add("PRIVATE-TOKEN", c.config.Token)
 	req.Header.Add("Content-Type", "application/json")
 
-	resp, err := c.client.Do(req) //nolint:gosec // URL is operator-configured GitLab base URL
+	resp, err := c.client.Do(req)
 	if err != nil {
 		log.ErrorContext(ctx, "Failed to delete file", "error", err)
 		return err
@@ -380,7 +384,8 @@ func (c *client) fetchDefaultBranch() string {
 	log := logger.FromContext(ctx).With("gitlab", c.config.BaseURL)
 
 	log.DebugContext(ctx, "No branch configured, fetching default branch")
-	req, err := http.NewRequestWithContext(ctx,
+	req, err := http.NewRequestWithContext(
+		ctx,
 		http.MethodGet,
 		fmt.Sprintf("%s/api/v4/projects/%d/repository/branches", c.config.BaseURL, c.config.ProjectID),
 		http.NoBody,
@@ -393,7 +398,7 @@ func (c *client) fetchDefaultBranch() string {
 	req.Header.Add("PRIVATE-TOKEN", c.config.Token)
 	req.Header.Add("Content-Type", "application/json")
 
-	resp, err := c.client.Do(req) //nolint:gosec // URL is operator-configured GitLab base URL
+	resp, err := c.client.Do(req)
 	if err != nil {
 		log.ErrorContext(ctx, "Failed to fetch branches", "error", err)
 		return fallbackBranch

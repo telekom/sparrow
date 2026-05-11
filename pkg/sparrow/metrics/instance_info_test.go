@@ -102,7 +102,7 @@ func assertMetricsContainLabels(t *testing.T, metrics []*io_prometheus_client.Me
 
 		assert.Len(t, mf.GetMetric(), 1, "expected exactly one metric")
 
-		const wantVal = 1
+		const wantVal float64 = 1
 		for _, m := range mf.GetMetric() {
 			assert.Equal(t, wantVal, m.GetGauge().GetValue(), "%q metric value expected %d", instanceInfoMetric, wantVal)
 

@@ -42,7 +42,7 @@ func TestAPI_Run(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctx := context.Background()
+			ctx := t.Context()
 			a := api{
 				server: &http.Server{Addr: ":8080"}, //nolint:gosec // irrelevant
 				router: chi.NewRouter(),
@@ -52,14 +52,13 @@ func TestAPI_Run(t *testing.T) {
 				t.Fatalf("Failed to register routes: %v", err)
 			}
 
+			errCh := make(chan error, 1)
 			go func() {
-				if err := a.Run(ctx); (err != nil) != tt.wantErr {
-					t.Errorf("Run() error = %v, wantErr %v", err, tt.wantErr)
-				}
+				errCh <- a.Run(ctx)
 			}()
 			time.Sleep(10 * time.Millisecond)
 			if !tt.wantErr {
-				req := httptest.NewRequest(tt.want.method, tt.want.path, http.NoBody)
+				req := httptest.NewRequestWithContext(ctx, tt.want.method, tt.want.path, http.NoBody)
 				rec := httptest.NewRecorder()
 				a.router.ServeHTTP(rec, req)
 
@@ -70,12 +69,15 @@ func TestAPI_Run(t *testing.T) {
 				defer func() {
 					err := rec.Result().Body.Close()
 					if err != nil {
-						t.Fatalf("Failed to close recoder body")
+						t.Fatalf("Failed to close recorder body")
 					}
 				}()
 				if err := a.Shutdown(ctx); err != nil {
 					t.Fatalf("Failed to shutdown api: %v", err)
 				}
+			}
+			if err := <-errCh; (err != nil) != tt.wantErr {
+				t.Errorf("Run() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
@@ -167,7 +169,7 @@ func TestAPI_RegisterRoutes(t *testing.T) {
 
 			if !tt.wantErr {
 				for _, req := range tt.want {
-					request := httptest.NewRequest(req.method, req.path, http.NoBody)
+					request := httptest.NewRequestWithContext(t.Context(), req.method, req.path, http.NoBody)
 					recorder := httptest.NewRecorder()
 
 					a.router.ServeHTTP(recorder, request)

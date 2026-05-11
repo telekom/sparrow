@@ -13,6 +13,11 @@ import (
 	"github.com/telekom/sparrow/pkg/sparrow/targets/interactor"
 )
 
+const (
+	schemeHTTP  = "http"
+	schemeHTTPS = "https"
+)
+
 // TargetManager handles the management of globalTargets for
 // a Sparrow instance
 type TargetManager interface {
@@ -75,7 +80,7 @@ func (c *TargetManagerConfig) Validate(ctx context.Context) error {
 		return ErrInvalidUpdateInterval
 	}
 
-	if c.Scheme != "http" && c.Scheme != "https" {
+	if c.Scheme != schemeHTTP && c.Scheme != schemeHTTPS {
 		log.Error("The scheme should be either of: 'http', 'https'", "scheme", c.Scheme)
 		return ErrInvalidScheme
 	}

@@ -21,12 +21,17 @@ import (
 	"github.com/telekom/sparrow/pkg/checks"
 )
 
+const (
+	stateUnhealthy = "unhealthy"
+	stateHealthy   = "healthy"
+)
+
 var (
 	_            checks.Check   = (*Health)(nil)
 	_            checks.Runtime = (*Config)(nil)
 	stateMapping                = map[int]string{
-		0: "unhealthy",
-		1: "healthy",
+		0: stateUnhealthy,
+		1: stateHealthy,
 	}
 )
 
@@ -219,7 +224,7 @@ func getHealth(ctx context.Context, client *http.Client, url string) error {
 		return err
 	}
 
-	resp, err := client.Do(req) //nolint:bodyclose,gosec // Closed in defer below; URL is operator-configured
+	resp, err := client.Do(req) //nolint:bodyclose // Closed in defer below
 	if err != nil {
 		log.Error("Error while requesting health", "error", err)
 		return err

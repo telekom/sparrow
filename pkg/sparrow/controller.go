@@ -155,6 +155,8 @@ func (cc *ChecksController) UnregisterCheck(ctx context.Context, check checks.Ch
 	cc.checks.Delete(check)
 }
 
+const applicationJSON = "application/json"
+
 var oapiBoilerplate = openapi3.T{
 	// this object should probably be user defined
 	OpenAPI: "3.0.0",
@@ -196,7 +198,7 @@ func (cc *ChecksController) GenerateCheckSpecs(ctx context.Context) (openapi3.T,
 		responses.Set(fmt.Sprint(http.StatusOK), &openapi3.ResponseRef{
 			Value: &openapi3.Response{
 				Description: &bodyDesc,
-				Content:     openapi3.NewContentWithSchemaRef(ref, []string{"application/json"}),
+				Content:     openapi3.NewContentWithSchemaRef(ref, []string{applicationJSON}),
 			},
 		})
 		doc.Paths.Set(fmt.Sprintf("/v1/metrics/%s", name), &openapi3.PathItem{

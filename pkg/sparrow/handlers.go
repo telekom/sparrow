@@ -68,9 +68,9 @@ func (s *Sparrow) handleOpenAPI(w http.ResponseWriter, r *http.Request) {
 
 	var marshaler encoder
 	switch mime {
-	case "application/json":
+	case applicationJSON:
 		marshaler = json.NewEncoder(w)
-		w.Header().Add("Content-Type", "application/json")
+		w.Header().Add("Content-Type", applicationJSON)
 	default:
 		marshaler = yaml.NewEncoder(w)
 		w.Header().Add("Content-Type", "text/yaml")
@@ -121,5 +121,5 @@ func (s *Sparrow) handleCheckMetrics(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	w.Header().Add("Content-Type", "application/json")
+	w.Header().Add("Content-Type", applicationJSON)
 }

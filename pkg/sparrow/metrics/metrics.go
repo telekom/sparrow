@@ -62,7 +62,8 @@ func (m *manager) GetRegistry() *prometheus.Registry {
 // InitTracing initializes the OpenTelemetry tracing
 func (m *manager) InitTracing(ctx context.Context) error {
 	log := logger.FromContext(ctx)
-	res, err := resource.New(ctx,
+	res, err := resource.New(
+		ctx,
 		resource.WithHost(),
 		resource.WithContainer(),
 		resource.WithAttributes(
@@ -87,7 +88,8 @@ func (m *manager) InitTracing(ctx context.Context) error {
 		maxQueueSize = 1000
 		maxBatchSize = 100
 	)
-	bsp := sdktrace.NewBatchSpanProcessor(exporter,
+	bsp := sdktrace.NewBatchSpanProcessor(
+		exporter,
 		sdktrace.WithBatchTimeout(batchTimeout),
 		sdktrace.WithMaxQueueSize(maxQueueSize),
 		sdktrace.WithMaxExportBatchSize(maxBatchSize),

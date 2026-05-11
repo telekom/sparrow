@@ -43,15 +43,15 @@ func TestSparrow_handleOpenAPI(t *testing.T) {
 	}
 
 	tests := []test{
-		{name: "yaml is default", args: args{request: httptest.NewRequest(http.MethodGet, "/openapi.yaml", bytes.NewBuffer([]byte{})), response: httptest.NewRecorder(), headers: map[string]string{}}, decoder: func(rr *httptest.ResponseRecorder) error {
+		{name: "yaml is default", args: args{request: httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/openapi.yaml", bytes.NewBuffer([]byte{})), response: httptest.NewRecorder(), headers: map[string]string{}}, decoder: func(rr *httptest.ResponseRecorder) error {
 			b := rr.Body.Bytes()
 			return yaml.Unmarshal(b, &openapi3.T{})
 		}},
-		{name: "set json via accept header", args: args{request: httptest.NewRequest(http.MethodGet, "/openapi.yaml", bytes.NewBuffer([]byte{})), response: httptest.NewRecorder(), headers: map[string]string{"Accept": "application/json"}}, decoder: func(rr *httptest.ResponseRecorder) error {
+		{name: "set json via accept header", args: args{request: httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/openapi.yaml", bytes.NewBuffer([]byte{})), response: httptest.NewRecorder(), headers: map[string]string{"Accept": applicationJSON}}, decoder: func(rr *httptest.ResponseRecorder) error {
 			b := rr.Body.Bytes()
 			return json.Unmarshal(b, &openapi3.T{})
 		}},
-		{name: "set yaml via accept header", args: args{request: httptest.NewRequest(http.MethodGet, "/openapi.yaml", bytes.NewBuffer([]byte{})), response: httptest.NewRecorder(), headers: map[string]string{"Accept": "text/yaml"}}, decoder: func(rr *httptest.ResponseRecorder) error {
+		{name: "set yaml via accept header", args: args{request: httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/openapi.yaml", bytes.NewBuffer([]byte{})), response: httptest.NewRecorder(), headers: map[string]string{"Accept": "text/yaml"}}, decoder: func(rr *httptest.ResponseRecorder) error {
 			b := rr.Body.Bytes()
 			return yaml.Unmarshal(b, &openapi3.T{})
 		}},
@@ -109,9 +109,9 @@ func TestSparrow_handleCheckMetrics(t *testing.T) {
 			}
 
 			w := httptest.NewRecorder()
-			r := chiRequest(httptest.NewRequest(http.MethodGet, "/v1/metrics/alpha", bytes.NewBuffer([]byte{})), "alpha")
+			r := chiRequest(httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/v1/metrics/alpha", bytes.NewBuffer([]byte{})), "alpha")
 			if tt.wantCode == http.StatusBadRequest {
-				r = chiRequest(httptest.NewRequest(http.MethodGet, "/v1/metrics/", bytes.NewBuffer([]byte{})), "")
+				r = chiRequest(httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/v1/metrics/", bytes.NewBuffer([]byte{})), "")
 			}
 
 			s.handleCheckMetrics(w, r)

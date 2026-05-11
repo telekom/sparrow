@@ -9,6 +9,13 @@ import (
 	"github.com/telekom/sparrow/pkg/checks"
 )
 
+const (
+	statusMetric    = "sparrow_dns_status"
+	durationMetric  = "sparrow_dns_duration_seconds"
+	countMetric     = "sparrow_dns_check_count"
+	histogramMetric = "sparrow_dns_duration"
+)
+
 // metrics defines the metric collectors of the DNS check
 type metrics struct {
 	status    *prometheus.GaugeVec
@@ -22,31 +29,31 @@ func newMetrics() metrics {
 	return metrics{
 		status: prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
-				Name: "sparrow_dns_status",
+				Name: statusMetric,
 				Help: "Specifies if the target can be resolved.",
 			},
-			[]string{"target"},
+			[]string{checks.LabelTarget},
 		),
 		duration: prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
-				Name: "sparrow_dns_duration_seconds",
+				Name: durationMetric,
 				Help: "Duration of DNS resolution attempts in seconds.",
 			},
-			[]string{"target"},
+			[]string{checks.LabelTarget},
 		),
 		count: prometheus.NewCounterVec(
 			prometheus.CounterOpts{
-				Name: "sparrow_dns_check_count",
+				Name: countMetric,
 				Help: "Total number of DNS checks performed on the target and if they were successful.",
 			},
-			[]string{"target"},
+			[]string{checks.LabelTarget},
 		),
 		histogram: prometheus.NewHistogramVec(
 			prometheus.HistogramOpts{
-				Name: "sparrow_dns_duration",
+				Name: histogramMetric,
 				Help: "Histogram of response times for DNS checks in seconds.",
 			},
-			[]string{"target"},
+			[]string{checks.LabelTarget},
 		),
 	}
 }

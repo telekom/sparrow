@@ -99,7 +99,7 @@ func (hl *HttpLoader) getRuntimeConfig(ctx context.Context) (cfg runtime.Config,
 		req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", hl.cfg.Http.Token))
 	}
 
-	res, err := hl.client.Do(req) //nolint:bodyclose,gosec // Closed in defer below; URL is operator-configured
+	res, err := hl.client.Do(req) //nolint:bodyclose // Closed in defer below
 	if err != nil {
 		log.Error("Http get request failed", "error", err.Error())
 		return cfg, err

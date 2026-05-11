@@ -43,7 +43,7 @@ func TestHttpLoader_GetRuntimeConfig(t *testing.T) {
 			name: "Get runtime configuration",
 			cfg: &Config{
 				Loader: LoaderConfig{
-					Type:     "http",
+					Type:     loaderHTTP,
 					Interval: 1 * time.Second,
 				},
 			},
@@ -63,7 +63,7 @@ func TestHttpLoader_GetRuntimeConfig(t *testing.T) {
 			name: "Get runtime configuration with auth",
 			cfg: &Config{
 				Loader: LoaderConfig{
-					Type:     "http",
+					Type:     loaderHTTP,
 					Interval: time.Second,
 					Http: HttpLoaderConfig{
 						Token: "SECRET",
@@ -86,7 +86,7 @@ func TestHttpLoader_GetRuntimeConfig(t *testing.T) {
 			name: "Get runtime configuration with statuscode 400",
 			cfg: &Config{
 				Loader: LoaderConfig{
-					Type:     "http",
+					Type:     loaderHTTP,
 					Interval: time.Second,
 				},
 			},
@@ -100,7 +100,8 @@ func TestHttpLoader_GetRuntimeConfig(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			endpoint := "https://api.test.com/test"
-			httpmock.RegisterResponder(http.MethodGet, endpoint,
+			httpmock.RegisterResponder(
+				http.MethodGet, endpoint,
 				func(req *http.Request) (*http.Response, error) {
 					if tt.cfg.Loader.Http.Token != "" {
 						require.Equal(t, req.Header.Get("Authorization"), fmt.Sprintf("Bearer %s", tt.cfg.Loader.Http.Token))
@@ -200,7 +201,7 @@ func TestHttpLoader_Run(t *testing.T) {
 
 			hl := &HttpLoader{
 				cfg: LoaderConfig{
-					Type:     "http",
+					Type:     loaderHTTP,
 					Interval: tt.interval,
 					Http: HttpLoaderConfig{
 						Url: "https://api.test.com/test",
@@ -289,7 +290,7 @@ func TestHttpLoader_Run_config_sent_to_channel(t *testing.T) {
 
 	hl := &HttpLoader{
 		cfg: LoaderConfig{
-			Type:     "http",
+			Type:     loaderHTTP,
 			Interval: time.Millisecond * 500,
 			Http: HttpLoaderConfig{
 				Url: "https://api.test.com/test",
@@ -345,7 +346,7 @@ func TestHttpLoader_Run_empty_config_sent_to_channel_500(t *testing.T) {
 
 	hl := &HttpLoader{
 		cfg: LoaderConfig{
-			Type:     "http",
+			Type:     loaderHTTP,
 			Interval: time.Millisecond * 500,
 			Http: HttpLoaderConfig{
 				Url: "https://api.test.com/test",
@@ -392,7 +393,7 @@ func TestHttpLoader_Run_empty_config_sent_to_channel_client_error(t *testing.T) 
 
 	hl := &HttpLoader{
 		cfg: LoaderConfig{
-			Type:     "http",
+			Type:     loaderHTTP,
 			Interval: time.Millisecond * 500,
 			Http: HttpLoaderConfig{
 				Url: "https://api.test.com/test",

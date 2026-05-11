@@ -13,6 +13,22 @@ import (
 	"time"
 )
 
+const (
+	// formatText is the text format for logging
+	formatText = "TEXT"
+	// formatJSON is the JSON format for logging
+	formatJSON = "JSON"
+
+	// levelDebug is the debug log level
+	levelDebug = "DEBUG"
+	// levelInfo is the info log level
+	levelInfo = "INFO"
+	// levelWarn is the warn log level
+	levelWarn = "WARN"
+	// levelError is the error log level
+	levelError = "ERROR"
+)
+
 type logger struct{}
 
 // NewLogger creates a new slog.Logger instance.
@@ -74,7 +90,7 @@ func newHandler() slog.Handler {
 		Level:     getLevel(os.Getenv("LOG_LEVEL")),
 	}
 
-	if strings.ToUpper(os.Getenv("LOG_FORMAT")) == "TEXT" {
+	if strings.ToUpper(os.Getenv("LOG_FORMAT")) == formatText {
 		opts.ReplaceAttr = func(_ []string, a slog.Attr) slog.Attr {
 			if a.Key == slog.TimeKey {
 				v := a.Value.Any().(time.Time)
@@ -92,13 +108,13 @@ func newHandler() slog.Handler {
 // Returns the level if no mapped level is found it returns info level
 func getLevel(level string) slog.Level {
 	switch strings.ToUpper(level) {
-	case "DEBUG":
+	case levelDebug:
 		return slog.LevelDebug
-	case "INFO":
+	case levelInfo:
 		return slog.LevelInfo
-	case "WARN", "WARNING":
+	case levelWarn, "WARNING":
 		return slog.LevelWarn
-	case "ERROR":
+	case levelError:
 		return slog.LevelError
 	default:
 		return slog.LevelInfo

@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/telekom/sparrow/pkg/checks"
 )
 
 func TestMetrics_GetCollectors(t *testing.T) {
@@ -24,31 +25,31 @@ func TestMetrics_GetCollectors(t *testing.T) {
 			metrics: metrics{
 				status: prometheus.NewGaugeVec(
 					prometheus.GaugeOpts{
-						Name: "sparrow_dns_status",
+						Name: statusMetric,
 						Help: "Specifies if the target can be resolved.",
 					},
-					[]string{"target"},
+					[]string{checks.LabelTarget},
 				),
 				duration: prometheus.NewGaugeVec(
 					prometheus.GaugeOpts{
-						Name: "sparrow_dns_duration",
+						Name: durationMetric,
 						Help: "Duration of DNS resolution attempts in seconds.",
 					},
-					[]string{"target"},
+					[]string{checks.LabelTarget},
 				),
 				count: prometheus.NewCounterVec(
 					prometheus.CounterOpts{
-						Name: "sparrow_dns_check_count",
+						Name: countMetric,
 						Help: "Total number of DNS checks performed on the target and if they were successful.",
 					},
-					[]string{"target"},
+					[]string{checks.LabelTarget},
 				),
 				histogram: prometheus.NewHistogramVec(
 					prometheus.HistogramOpts{
-						Name: "sparrow_dns_duration",
+						Name: histogramMetric,
 						Help: "Histogram of response times for DNS checks in seconds.",
 					},
-					[]string{"target"},
+					[]string{checks.LabelTarget},
 				),
 			},
 		},
