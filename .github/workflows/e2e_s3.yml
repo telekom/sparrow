@@ -1,0 +1,40 @@
+# SPDX-FileCopyrightText: 2025 Deutsche Telekom IT GmbH
+#
+# SPDX-License-Identifier: Apache-2.0
+
+name: Test - E2E S3
+
+on:
+  pull_request:
+    paths:
+      - "pkg/sparrow/targets/remote/s3/**"
+      - "e2e/s3/**"
+      - "go.mod"
+      - "go.sum"
+  push:
+    paths:
+      - "pkg/sparrow/targets/remote/s3/**"
+      - "e2e/s3/**"
+      - "go.mod"
+      - "go.sum"
+
+permissions:
+  contents: read
+
+jobs:
+  e2e_s3:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      - name: Run S3 E2E tests
+        run: |
+          go mod download
+          go test -tags e2e -race -count=1 -v -timeout=5m ./e2e/s3/
