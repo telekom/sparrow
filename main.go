@@ -5,6 +5,8 @@
 package main
 
 import (
+	"context"
+
 	"github.com/telekom/sparrow/cmd"
 )
 
@@ -13,5 +15,6 @@ import (
 var version string
 
 func main() {
-	cmd.Execute(version)
+	ctx := context.Background()
+	cmd.Execute(ctx, version)
 }

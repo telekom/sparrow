@@ -5,6 +5,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -13,8 +14,8 @@ import (
 	"github.com/spf13/viper"
 )
 
-// NewCmdRoot creates a new root command
-func NewCmdRoot(version string) *cobra.Command {
+// NewRootCmd creates a new root command
+func NewRootCmd(version string) *cobra.Command {
 	var cfgFile string
 
 	rootCmd := &cobra.Command{
@@ -36,18 +37,18 @@ func NewCmdRoot(version string) *cobra.Command {
 
 // Execute adds all child commands to the root command
 // and executes the cmd tree
-func Execute(version string) {
+func Execute(ctx context.Context, version string) {
 	cmd := BuildCmd(version)
 
-	if err := cmd.Execute(); err != nil {
+	if err := cmd.ExecuteContext(ctx); err != nil {
 		_, _ = fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }
 
 func BuildCmd(version string) *cobra.Command {
-	cmd := NewCmdRoot(version)
-	cmd.AddCommand(NewCmdRun())
+	cmd := NewRootCmd(version)
+	cmd.AddCommand(NewRunCmd())
 	return cmd
 }
 

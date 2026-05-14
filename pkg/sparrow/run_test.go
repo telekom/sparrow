@@ -51,8 +51,8 @@ func TestSparrow_Run_FullComponentStart(t *testing.T) {
 		},
 	}
 
-	s := New(c)
-	ctx := context.Background()
+	ctx := t.Context()
+	s := New(ctx, c)
 	errCh := make(chan error, 1)
 	go func() {
 		err := s.Run(ctx)
@@ -84,7 +84,7 @@ func TestSparrow_Run_ContextCancel(t *testing.T) {
 		},
 	}
 
-	s := New(c)
+	s := New(t.Context(), c)
 	s.tarMan = &managermock.MockTargetManager{}
 	ctx, cancel := context.WithCancel(context.Background())
 	go func() {

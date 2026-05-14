@@ -57,7 +57,7 @@ type Sparrow struct {
 }
 
 // New creates a new sparrow from a given configfile
-func New(cfg *config.Config) *Sparrow {
+func New(ctx context.Context, cfg *config.Config) *Sparrow {
 	m := metrics.New(cfg.Telemetry)
 	dbase := db.NewInMemory()
 
@@ -83,8 +83,7 @@ func New(cfg *config.Config) *Sparrow {
 	// Register instance metadata as Prometheus info metric (once per instance)
 	if err := metrics.RegisterInstanceInfo(m.GetRegistry(), cfg.SparrowName, cfg.Metadata); err != nil {
 		// Non-fatal: instance can run without the info metric
-		// Logging requires context; use background with logger for startup
-		log := logger.FromContext(context.Background())
+		log := logger.FromContext(ctx)
 		log.Error("Failed to register sparrow_instance_info metric", "error", err)
 	}
 
