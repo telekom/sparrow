@@ -110,7 +110,7 @@ func TestNew_OIDCReturnsError(t *testing.T) {
 		Bucket:   "test-bucket",
 		Auth: AuthConfig{
 			Provider: "oidc",
-			OIDC: OIDCAuthConfig{ //nolint:gosec // G101 false positive on test fixture
+			OIDC: OIDCAuthConfig{ //gosec:disable G101 -- false positive on test fixture
 				TokenPath: "/var/run/secrets/token",
 				RoleARN:   "arn:aws:iam::123:role/test",
 			},
@@ -182,7 +182,8 @@ func TestClient_FetchFiles(t *testing.T) {
 	target1JSON, _ := json.Marshal(target1)
 	target2JSON, _ := json.Marshal(target2)
 
-	contents := fmt.Sprintf("%s\n  %s\n  %s",
+	contents := fmt.Sprintf(
+		"%s\n  %s\n  %s",
 		fmt.Sprintf(listBucketContentXML, "sparrow-1.json", len(target1JSON)),
 		fmt.Sprintf(listBucketContentXML, "sparrow-2.json", len(target2JSON)),
 		fmt.Sprintf(listBucketContentXML, "README.md", 100),
