@@ -24,5 +24,6 @@ func ApplyJitter(d time.Duration, factor float64) time.Duration {
 	minDuration := float64(d) * (1 - factor)
 	jitterRange := float64(d) * factor
 
-	return time.Duration(minDuration + rand.Float64()*jitterRange) //nolint:gosec // jitter does not need crypto rand
+	//gosec:disable G404 -- jitter does not need crypto rand
+	return time.Duration(minDuration + rand.Float64()*jitterRange)
 }
