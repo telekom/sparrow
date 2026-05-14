@@ -10,9 +10,10 @@ import (
 	"time"
 )
 
-// ApplyJitter applies full jitter with a bounded minimum to a duration.
-// The returned duration is in the range [d*(1-factor), d].
-// A factor of 0 returns d unchanged. Factor must be in [0.0, 1.0].
+// ApplyJitter adds a random jitter to d. factor is a percentage of d
+// that will be subtracted from d, so the returned duration is in the
+// range [d*(1-factor), d]. A factor of 0 returns d unchanged.
+// factor must be in [0.0, 1.0]; values above 1.0 are clamped to 1.0.
 func ApplyJitter(d time.Duration, factor float64) time.Duration {
 	if math.IsNaN(factor) || math.IsInf(factor, 0) || factor <= 0 || d <= 0 {
 		return d
