@@ -7,6 +7,7 @@ package gitlab
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -231,13 +232,13 @@ func (c *client) fetchNextFileList(ctx context.Context, reqUrl string) ([]string
 
 // PutFile commits the current instance to the configured gitlab repository
 // as a global target for other sparrow instances to discover
-func (c *client) PutFile(ctx context.Context, file remote.File) error { //nolint: dupl,gocritic // no need to refactor yet
+func (c *client) PutFile(ctx context.Context, file remote.File) error { //nolint:dupl // no need to refactor yet
 	log := logger.FromContext(ctx)
 	log.DebugContext(ctx, "Registering sparrow instance to gitlab")
 
 	// chose method based on whether the registration has already happened
 	n := url.PathEscape(file.Name)
-	b, err := file.Serialize(c.config.Branch)
+	b, err := c.serialize(file)
 	if err != nil {
 		log.ErrorContext(ctx, "Failed to create request", "error", err)
 		return err
@@ -276,13 +277,13 @@ func (c *client) PutFile(ctx context.Context, file remote.File) error { //nolint
 
 // PostFile commits the current instance to the configured gitlab repository
 // as a global target for other sparrow instances to discover
-func (c *client) PostFile(ctx context.Context, file remote.File) error { //nolint:dupl,gocritic // no need to refactor yet
+func (c *client) PostFile(ctx context.Context, file remote.File) error { //nolint:dupl // no need to refactor yet
 	log := logger.FromContext(ctx)
 	log.DebugContext(ctx, "Posting registration file to gitlab")
 
 	// chose method based on whether the registration has already happened
 	n := url.PathEscape(file.Name)
-	b, err := file.Serialize(c.config.Branch)
+	b, err := c.serialize(file)
 	if err != nil {
 		log.ErrorContext(ctx, "Failed to create request", "error", err)
 		return err
@@ -320,7 +321,7 @@ func (c *client) PostFile(ctx context.Context, file remote.File) error { //nolin
 }
 
 // DeleteFile deletes the file matching the filename from the configured gitlab repository
-func (c *client) DeleteFile(ctx context.Context, file remote.File) error { //nolint:gocritic // no performance concerns yet
+func (c *client) DeleteFile(ctx context.Context, file remote.File) error {
 	log := logger.FromContext(ctx).With("file", file)
 
 	if file.Name == "" {
@@ -329,7 +330,7 @@ func (c *client) DeleteFile(ctx context.Context, file remote.File) error { //nol
 
 	log.DebugContext(ctx, "Deleting file from gitlab")
 	n := url.PathEscape(file.Name)
-	b, err := file.Serialize(c.config.Branch)
+	b, err := c.serialize(file)
 	if err != nil {
 		log.ErrorContext(ctx, "Failed to create request", "error", err)
 		return err
@@ -429,6 +430,27 @@ func (c *client) fetchDefaultBranch() string {
 
 	log.WarnContext(ctx, "No default branch found, using fallback", "fallback", fallbackBranch)
 	return fallbackBranch
+}
+
+// serialize serializes the file to a GitLab Repository Files API compatible payload.
+// The content is base64 encoded and includes commit metadata.
+func (c *client) serialize(f remote.File) ([]byte, error) {
+	content, err := json.Marshal(f.Content)
+	if err != nil {
+		return nil, err
+	}
+
+	encoded := base64.StdEncoding.EncodeToString(content)
+
+	// Derive author info from the file name
+	name := strings.TrimSuffix(f.Name, ".json")
+	return json.Marshal(map[string]string{
+		"branch":         c.config.Branch,
+		"author_email":   fmt.Sprintf("%s@sparrow", name),
+		"author_name":    name,
+		"content":        encoded,
+		"commit_message": fmt.Sprintf("Update target %s", name),
+	})
 }
 
 // toError reads the error response from the gitlab API

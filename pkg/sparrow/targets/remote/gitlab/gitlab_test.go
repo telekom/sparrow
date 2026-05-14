@@ -311,28 +311,22 @@ func TestClient_PutFile(t *testing.T) { //nolint:dupl // no need to refactor yet
 		{
 			name: "success",
 			file: remote.File{
-				AuthorEmail: "test@sparrow",
-				AuthorName:  "sparrpw",
 				Content: checks.GlobalTarget{
 					Url:      "https://test.de",
 					LastSeen: now,
 				},
-				CommitMessage: "test-commit",
-				Name:          "test.de.json",
+				Name: "test.de.json",
 			},
 			mockCode: http.StatusOK,
 		},
 		{
 			name: "failure - API error",
 			file: remote.File{
-				AuthorEmail: "test@sparrow",
-				AuthorName:  "sparrpw",
 				Content: checks.GlobalTarget{
 					Url:      "https://test.de",
 					LastSeen: now,
 				},
-				CommitMessage: "test-commit",
-				Name:          "test.de.json",
+				Name: "test.de.json",
 			},
 			mockCode: http.StatusInternalServerError,
 			wantErr:  true,
@@ -386,28 +380,22 @@ func TestClient_PostFile(t *testing.T) { //nolint:dupl // no need to refactor ye
 		{
 			name: "success",
 			file: remote.File{
-				AuthorEmail: "test@sparrow",
-				AuthorName:  "sparrpw",
 				Content: checks.GlobalTarget{
 					Url:      "https://test.de",
 					LastSeen: now,
 				},
-				CommitMessage: "test-commit",
-				Name:          "test.de.json",
+				Name: "test.de.json",
 			},
 			mockCode: http.StatusCreated,
 		},
 		{
 			name: "failure - API error",
 			file: remote.File{
-				AuthorEmail: "test@sparrow",
-				AuthorName:  "sparrpw",
 				Content: checks.GlobalTarget{
 					Url:      "https://test.de",
 					LastSeen: now,
 				},
-				CommitMessage: "test-commit",
-				Name:          "test.de.json",
+				Name: "test.de.json",
 			},
 			mockCode: http.StatusInternalServerError,
 			wantErr:  true,
@@ -494,10 +482,7 @@ func TestClient_DeleteFile(t *testing.T) {
 			httpmock.RegisterResponder("DELETE", fmt.Sprintf("http://test/api/v4/projects/%d/repository/files/%s", projID, tt.fileName), resp)
 
 			f := remote.File{
-				Name:          tt.fileName,
-				CommitMessage: "Deleted registration file",
-				AuthorName:    "sparrow-test",
-				AuthorEmail:   "sparrow-test@sparrow",
+				Name: tt.fileName,
 			}
 			if err := g.DeleteFile(context.Background(), f); (err != nil) != tt.wantErr {
 				t.Fatalf("DeleteFile() error = %v, wantErr %v", err, tt.wantErr)

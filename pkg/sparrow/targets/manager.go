@@ -63,9 +63,14 @@ func newMetrics() metrics {
 }
 
 // NewManager creates a new target manager
-func NewManager(name string, cfg TargetManagerConfig, mp smetrics.Provider, targetsChanged chan<- struct{}) TargetManager { //nolint:gocritic // no performance concerns yet
+func NewManager(name string, cfg TargetManagerConfig, mp smetrics.Provider, targetsChanged chan<- struct{}) (TargetManager, error) { //nolint:gocritic // no performance concerns yet
 	m := newMetrics()
 	mp.GetRegistry().MustRegister(m.registered)
+
+	i, err := cfg.Type.Interactor(&cfg.Config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create interactor: %w", err)
+	}
 
 	return &manager{
 		name:            name,
@@ -73,10 +78,10 @@ func NewManager(name string, cfg TargetManagerConfig, mp smetrics.Provider, targ
 		mu:              sync.RWMutex{},
 		done:            make(chan struct{}, 1),
 		targetsChanged:  targetsChanged,
-		interactor:      cfg.Type.Interactor(&cfg.Config),
+		interactor:      i,
 		metrics:         m,
 		metricsProvider: mp,
-	}
+	}, nil
 }
 
 // Reconcile reconciles the targets of the target manager.
@@ -146,11 +151,9 @@ func (t *manager) Shutdown(ctx context.Context) error {
 
 	if t.registered {
 		f := remote.File{
-			AuthorEmail:   fmt.Sprintf("%s@sparrow", t.name),
-			AuthorName:    t.name,
-			CommitMessage: "Unregistering global target",
+			Name: t.name + ".json",
 		}
-		f.SetFileName(fmt.Sprintf("%s.json", t.name))
+
 		err := t.interactor.DeleteFile(ctxS, f)
 		if err != nil {
 			log.ErrorContext(ctx, "Failed to shutdown gracefully", "error", err)
@@ -183,12 +186,9 @@ func (t *manager) register(ctx context.Context) error {
 	}
 
 	f := remote.File{
-		AuthorEmail:   fmt.Sprintf("%s@sparrow", t.name),
-		AuthorName:    t.name,
-		CommitMessage: "Initial registration",
-		Content:       checks.GlobalTarget{Url: fmt.Sprintf("%s://%s", t.cfg.Scheme, t.name), LastSeen: time.Now().UTC()},
+		Name:    t.name + ".json",
+		Content: checks.GlobalTarget{Url: fmt.Sprintf("%s://%s", t.cfg.Scheme, t.name), LastSeen: time.Now().UTC()},
 	}
-	f.SetFileName(fmt.Sprintf("%s.json", t.name))
 
 	log.DebugContext(ctx, "Registering as global target")
 	err := t.interactor.PostFile(ctx, f)
@@ -215,12 +215,9 @@ func (t *manager) update(ctx context.Context) error {
 	}
 
 	f := remote.File{
-		AuthorEmail:   fmt.Sprintf("%s@sparrow", t.name),
-		AuthorName:    t.name,
-		CommitMessage: "Updated registration",
-		Content:       checks.GlobalTarget{Url: fmt.Sprintf("%s://%s", t.cfg.Scheme, t.name), LastSeen: time.Now().UTC()},
+		Name:    fmt.Sprintf("%s.json", t.name),
+		Content: checks.GlobalTarget{Url: fmt.Sprintf("%s://%s", t.cfg.Scheme, t.name), LastSeen: time.Now().UTC()},
 	}
-	f.SetFileName(fmt.Sprintf("%s.json", t.name))
 
 	log.DebugContext(ctx, "Updating instance registration")
 	err := t.interactor.PutFile(ctx, f)

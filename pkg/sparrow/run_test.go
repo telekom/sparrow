@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/telekom/sparrow/pkg/api"
 	"github.com/telekom/sparrow/pkg/checks"
 	"github.com/telekom/sparrow/pkg/checks/dns"
@@ -51,7 +52,8 @@ func TestSparrow_Run_FullComponentStart(t *testing.T) {
 		},
 	}
 
-	s := New(c)
+	s, err := New(c)
+	require.NoError(t, err)
 	ctx := context.Background()
 	errCh := make(chan error, 1)
 	go func() {
@@ -84,7 +86,8 @@ func TestSparrow_Run_ContextCancel(t *testing.T) {
 		},
 	}
 
-	s := New(c)
+	s, err := New(c)
+	require.NoError(t, err)
 	s.tarMan = &managermock.MockTargetManager{}
 	ctx, cancel := context.WithCancel(context.Background())
 	go func() {

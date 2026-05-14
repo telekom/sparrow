@@ -57,7 +57,7 @@ type Sparrow struct {
 }
 
 // New creates a new sparrow from a given configfile
-func New(cfg *config.Config) *Sparrow {
+func New(cfg *config.Config) (*Sparrow, error) {
 	m := metrics.New(cfg.Telemetry)
 	dbase := db.NewInMemory()
 
@@ -75,7 +75,10 @@ func New(cfg *config.Config) *Sparrow {
 	}
 
 	if cfg.HasTargetManager() {
-		gm := targets.NewManager(cfg.SparrowName, cfg.TargetManager, m, sparrow.cTargets)
+		gm, err := targets.NewManager(cfg.SparrowName, cfg.TargetManager, m, sparrow.cTargets)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create target manager: %w", err)
+		}
 		sparrow.tarMan = gm
 	}
 	sparrow.loader = config.NewLoader(cfg, sparrow.cRuntime)
@@ -88,7 +91,7 @@ func New(cfg *config.Config) *Sparrow {
 		log.Error("Failed to register sparrow_instance_info metric", "error", err)
 	}
 
-	return sparrow
+	return sparrow, nil
 }
 
 // Run starts the sparrow

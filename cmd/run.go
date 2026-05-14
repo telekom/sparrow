@@ -70,7 +70,11 @@ func run() func(cmd *cobra.Command, args []string) error {
 		sigChan := make(chan os.Signal, 1)
 		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
-		s := sparrow.New(cfg)
+		s, err := sparrow.New(cfg)
+		if err != nil {
+			log.ErrorContext(ctx, "Failed to create sparrow instance", "error", err)
+			return err
+		}
 		cErr := make(chan error, 1)
 		log.InfoContext(ctx, "Running sparrow")
 		go func() {
