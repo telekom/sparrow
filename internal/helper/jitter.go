@@ -5,6 +5,7 @@
 package helper
 
 import (
+	"math"
 	"math/rand/v2"
 	"time"
 )
@@ -13,7 +14,7 @@ import (
 // The returned duration is in the range [d*(1-factor), d].
 // A factor of 0 returns d unchanged. Factor must be in [0.0, 1.0].
 func ApplyJitter(d time.Duration, factor float64) time.Duration {
-	if factor <= 0 || d <= 0 {
+	if math.IsNaN(factor) || math.IsInf(factor, 0) || factor <= 0 || d <= 0 {
 		return d
 	}
 	if factor > 1 {
