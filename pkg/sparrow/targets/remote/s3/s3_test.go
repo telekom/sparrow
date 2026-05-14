@@ -11,10 +11,13 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -104,8 +107,8 @@ func TestNew_DefaultRegion(t *testing.T) {
 	assert.NotNil(t, i)
 }
 
-func TestNew_OIDCReturnsError(t *testing.T) {
-	_, err := New(&Config{
+func TestNew_OIDCAuth(t *testing.T) {
+	i, err := New(&Config{
 		Endpoint: "s3.amazonaws.com",
 		Bucket:   "test-bucket",
 		Auth: AuthConfig{
@@ -116,7 +119,8 @@ func TestNew_OIDCReturnsError(t *testing.T) {
 			},
 		},
 	})
-	require.ErrorIs(t, err, ErrOIDCNotImplemented)
+	require.NoError(t, err)
+	assert.NotNil(t, i)
 }
 
 func TestNew_UnknownProvider(t *testing.T) {
@@ -403,4 +407,44 @@ func TestConfig_Validate(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestOIDC_TokenReader(t *testing.T) {
+	t.Run("reads token from file", func(t *testing.T) {
+		tokenFile := filepath.Join(t.TempDir(), "token")
+		require.NoError(t, os.WriteFile(tokenFile, []byte("  eyJhbGciOiJSUzI1NiJ9.test.sig  \n"), 0o400))
+
+		auth := AuthConfig{
+			Provider: credentialOIDC,
+			OIDC: OIDCAuthConfig{
+				TokenPath: tokenFile,
+				RoleARN:   "arn:aws:iam::123:role/test",
+			},
+		}
+
+		creds, err := auth.newCredentials()
+		require.NoError(t, err)
+		assert.NotNil(t, creds)
+	})
+
+	t.Run("error on missing file", func(t *testing.T) {
+		auth := AuthConfig{
+			Provider: credentialOIDC,
+			OIDC: OIDCAuthConfig{
+				TokenPath: "/nonexistent/path/token",
+				RoleARN:   "arn:aws:iam::123:role/test",
+			},
+		}
+
+		// newCredentials succeeds (credentials are lazy)
+		creds, err := auth.newCredentials()
+		require.NoError(t, err)
+
+		// But retrieving triggers the token read, which fails
+		_, err = creds.GetWithContext(&credentials.CredContext{
+			Client: http.DefaultClient,
+		})
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "failed to read OIDC token")
+	})
 }

@@ -22,9 +22,6 @@ import (
 	"github.com/telekom/sparrow/pkg/sparrow/targets/remote"
 )
 
-// ErrOIDCNotImplemented is returned when OIDC auth is configured but not yet implemented
-var ErrOIDCNotImplemented = errors.New("OIDC authentication is not yet implemented, use static credentials")
-
 // defaultRegion is used when no region is configured
 const defaultRegion = "eu-central-1"
 

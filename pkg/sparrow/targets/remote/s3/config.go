@@ -8,6 +8,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"strings"
 
 	"github.com/minio/minio-go/v7/pkg/credentials"
 
@@ -123,7 +125,28 @@ func (a *AuthConfig) newCredentials() (*credentials.Credentials, error) {
 			a.Static.SessionToken,
 		), nil
 	case credentialOIDC:
-		return nil, ErrOIDCNotImplemented
+		tokenFetcher := func() (*credentials.WebIdentityToken, error) {
+			data, err := os.ReadFile(a.OIDC.TokenPath)
+			if err != nil {
+				return nil, fmt.Errorf("failed to read OIDC token from %q: %w", a.OIDC.TokenPath, err)
+			}
+			return &credentials.WebIdentityToken{
+				Token: strings.TrimSpace(string(data)),
+			}, nil
+		}
+
+		stsEndpoint := a.OIDC.STSEndpoint
+		if stsEndpoint == "" {
+			stsEndpoint = "https://sts.amazonaws.com"
+		}
+
+		return credentials.NewSTSWebIdentity(
+			stsEndpoint,
+			tokenFetcher,
+			func(s *credentials.STSWebIdentity) {
+				s.RoleARN = a.OIDC.RoleARN
+			},
+		)
 	default:
 		return nil, fmt.Errorf("%w: %q", ErrUnknownProvider, a.Provider)
 	}
