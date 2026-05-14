@@ -190,6 +190,54 @@ func TestTargetManagerConfig_Validate(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{
+			name: "valid config - jitter 0.0",
+			cfg: TargetManagerConfig{
+				Type: "gitlab",
+				General: General{
+					Scheme:        schemeHTTPS,
+					CheckInterval: 1 * time.Second,
+					Jitter:        0.0,
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "valid config - jitter 1.0",
+			cfg: TargetManagerConfig{
+				Type: "gitlab",
+				General: General{
+					Scheme:        schemeHTTPS,
+					CheckInterval: 1 * time.Second,
+					Jitter:        1.0,
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "invalid config - jitter negative",
+			cfg: TargetManagerConfig{
+				Type: "gitlab",
+				General: General{
+					Scheme:        schemeHTTPS,
+					CheckInterval: 1 * time.Second,
+					Jitter:        -0.1,
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid config - jitter above 1",
+			cfg: TargetManagerConfig{
+				Type: "gitlab",
+				General: General{
+					Scheme:        schemeHTTPS,
+					CheckInterval: 1 * time.Second,
+					Jitter:        1.5,
+				},
+			},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

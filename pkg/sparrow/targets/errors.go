@@ -19,4 +19,6 @@ var (
 	ErrInvalidInteractorType = errors.New("invalid interactor type")
 	// ErrInvalidScheme is returned when the scheme is not http or https
 	ErrInvalidScheme = errors.New("scheme must be 'http' of 'https'")
+	// ErrInvalidJitter is returned when the jitter factor is out of range
+	ErrInvalidJitter = errors.New("jitter must be between 0.0 and 1.0")
 )
