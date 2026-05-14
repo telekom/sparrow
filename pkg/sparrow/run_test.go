@@ -28,7 +28,7 @@ import (
 // loader and a targetManager all start.
 func TestSparrow_Run_FullComponentStart(t *testing.T) {
 	c := &config.Config{
-		Api: api.Config{ListeningAddress: ":9090"},
+		Api: api.Config{ListeningAddress: ":0"},
 		Loader: config.LoaderConfig{
 			Type:     "file",
 			File:     config.FileLoaderConfig{Path: "../config/test/data/config.yaml"},
@@ -78,7 +78,7 @@ func TestSparrow_Run_FullComponentStart(t *testing.T) {
 // will return an error and all started components will be shut down.
 func TestSparrow_Run_ContextCancel(t *testing.T) {
 	c := &config.Config{
-		Api: api.Config{ListeningAddress: ":9090"},
+		Api: api.Config{ListeningAddress: ":0"},
 		Loader: config.LoaderConfig{
 			Type:     "file",
 			File:     config.FileLoaderConfig{Path: "../config/test/data/config.yaml"},
