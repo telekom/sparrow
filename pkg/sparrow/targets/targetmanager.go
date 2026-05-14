@@ -48,6 +48,10 @@ type General struct {
 	// Scheme is the scheme used for the remote target manager
 	// Can either be http or https
 	Scheme string `yaml:"scheme" mapstructure:"scheme"`
+	// Jitter is the jitter factor applied to polling intervals.
+	// A value between 0.0 (no jitter) and 1.0 (full jitter).
+	// The actual interval will be in [interval*(1-jitter), interval].
+	Jitter float64 `yaml:"jitter" mapstructure:"jitter"`
 }
 
 // TargetManagerConfig is the configuration for the target manager
@@ -83,6 +87,11 @@ func (c *TargetManagerConfig) Validate(ctx context.Context) error {
 	if c.Scheme != schemeHTTP && c.Scheme != schemeHTTPS {
 		log.Error("The scheme should be either of: 'http', 'https'", "scheme", c.Scheme)
 		return ErrInvalidScheme
+	}
+
+	if c.Jitter < 0 || c.Jitter > 1 {
+		log.Error("The jitter factor should be between 0.0 and 1.0", "jitter", c.Jitter)
+		return ErrInvalidJitter
 	}
 
 	switch c.Type {

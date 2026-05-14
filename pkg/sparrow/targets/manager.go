@@ -14,6 +14,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	smetrics "github.com/telekom/sparrow/pkg/sparrow/metrics"
 
+	"github.com/telekom/sparrow/internal/helper"
 	"github.com/telekom/sparrow/internal/logger"
 	"github.com/telekom/sparrow/pkg/checks"
 	"github.com/telekom/sparrow/pkg/sparrow/targets/remote"
@@ -114,19 +115,19 @@ func (t *manager) Reconcile(ctx context.Context) error {
 			if err != nil {
 				log.WarnContext(ctx, "Failed to get global targets", "error", err)
 			}
-			checkTimer.Reset(t.cfg.CheckInterval)
+			checkTimer.Reset(helper.ApplyJitter(t.cfg.CheckInterval, t.cfg.Jitter))
 		case <-registrationTimer.C:
 			err := t.register(ctx)
 			if err != nil {
 				log.WarnContext(ctx, "Failed to register self as global target", "error", err)
 			}
-			registrationTimer.Reset(t.cfg.RegistrationInterval)
+			registrationTimer.Reset(helper.ApplyJitter(t.cfg.RegistrationInterval, t.cfg.Jitter))
 		case <-updateTimer.C:
 			err := t.update(ctx)
 			if err != nil {
 				log.WarnContext(ctx, "Failed to update registration", "error", err)
 			}
-			updateTimer.Reset(t.cfg.UpdateInterval)
+			updateTimer.Reset(helper.ApplyJitter(t.cfg.UpdateInterval, t.cfg.Jitter))
 		}
 	}
 }
