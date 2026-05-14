@@ -21,21 +21,9 @@ exposes the results as Prometheus metrics and a REST API.
 
 ## Quick Start
 
-Install via Helm:
-
-```sh
-helm -n sparrow upgrade -i sparrow \
-  oci://ghcr.io/telekom/charts/sparrow --create-namespace
-```
-
-Or run the binary directly:
-
-```sh
-sparrow run --sparrowName sparrow.example.com
-```
-
-See [Installation](docs/installation.md) for all options
-(binary, container image, Helm).
+Download the binary (see [Installation](docs/installation.md)),
+then follow the [Quickstart guide](docs/quickstart.md) to run
+your first health check in under five minutes.
 
 ## Available Checks
 

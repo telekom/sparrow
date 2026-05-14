@@ -8,6 +8,8 @@ SPDX-License-Identifier: CC-BY-4.0
 
 ## Getting Started
 
+- [Quickstart](quickstart.md) — run your first health check in
+  under five minutes
 - [Installation](installation.md) — binary, container image,
   Helm chart
 - [Configuration](configuration.md) — startup config, loader,
