@@ -25,7 +25,7 @@ type MockClient struct {
 	postFileCalled int
 }
 
-func (m *MockClient) PutFile(ctx context.Context, _ remote.File) error { //nolint: gocritic // irrelevant
+func (m *MockClient) PutFile(ctx context.Context, _ remote.File) error {
 	log := logger.FromContext(ctx)
 	log.Info("MockPutFile called", "err", m.putFileErr)
 	m.mu.Lock()
@@ -34,7 +34,7 @@ func (m *MockClient) PutFile(ctx context.Context, _ remote.File) error { //nolin
 	return m.putFileErr
 }
 
-func (m *MockClient) PostFile(ctx context.Context, _ remote.File) error { //nolint: gocritic // irrelevant
+func (m *MockClient) PostFile(ctx context.Context, _ remote.File) error {
 	log := logger.FromContext(ctx)
 	log.Info("MockPostFile called", "err", m.postFileErr)
 	m.mu.Lock()
@@ -49,7 +49,7 @@ func (m *MockClient) FetchFiles(ctx context.Context) ([]checks.GlobalTarget, err
 	return m.targets, m.fetchFilesErr
 }
 
-func (m *MockClient) DeleteFile(ctx context.Context, file remote.File) error { //nolint: gocritic // irrelevant
+func (m *MockClient) DeleteFile(ctx context.Context, file remote.File) error {
 	log := logger.FromContext(ctx)
 	log.Info("MockDeleteFile called", "filename", file, "err", m.deleteFileErr)
 	return m.deleteFileErr

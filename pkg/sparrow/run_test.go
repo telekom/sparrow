@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/telekom/sparrow/pkg/api"
 	"github.com/telekom/sparrow/pkg/checks"
 	"github.com/telekom/sparrow/pkg/checks/dns"
@@ -27,7 +28,7 @@ import (
 // loader and a targetManager all start.
 func TestSparrow_Run_FullComponentStart(t *testing.T) {
 	c := &config.Config{
-		Api: api.Config{ListeningAddress: ":9090"},
+		Api: api.Config{ListeningAddress: ":0"},
 		Loader: config.LoaderConfig{
 			Type:     "file",
 			File:     config.FileLoaderConfig{Path: "../config/test/data/config.yaml"},
@@ -51,7 +52,8 @@ func TestSparrow_Run_FullComponentStart(t *testing.T) {
 		},
 	}
 
-	s := New(c)
+	s, err := New(c)
+	require.NoError(t, err)
 	ctx := context.Background()
 	errCh := make(chan error, 1)
 	go func() {
@@ -76,7 +78,7 @@ func TestSparrow_Run_FullComponentStart(t *testing.T) {
 // will return an error and all started components will be shut down.
 func TestSparrow_Run_ContextCancel(t *testing.T) {
 	c := &config.Config{
-		Api: api.Config{ListeningAddress: ":9090"},
+		Api: api.Config{ListeningAddress: ":0"},
 		Loader: config.LoaderConfig{
 			Type:     "file",
 			File:     config.FileLoaderConfig{Path: "../config/test/data/config.yaml"},
@@ -84,7 +86,8 @@ func TestSparrow_Run_ContextCancel(t *testing.T) {
 		},
 	}
 
-	s := New(c)
+	s, err := New(c)
+	require.NoError(t, err)
 	s.tarMan = &managermock.MockTargetManager{}
 	ctx, cancel := context.WithCancel(context.Background())
 	go func() {
