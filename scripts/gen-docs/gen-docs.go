@@ -4,7 +4,7 @@
 
 package main
 
-//go:generate go run gen-docs.go gen-docs --path ../../docs
+//go:generate go run gen-docs.go gen-docs --path ../../docs/reference
 
 import (
 	"fmt"
@@ -43,7 +43,7 @@ func NewCmdGenDocs() *cobra.Command {
 		RunE:  runGenDocs(&docPath),
 	}
 
-	cmd.PersistentFlags().StringVar(&docPath, "path", "docs", "directory path where the markdown files will be created")
+	cmd.PersistentFlags().StringVar(&docPath, "path", "docs/reference", "directory path where the markdown files will be created")
 
 	return cmd
 }

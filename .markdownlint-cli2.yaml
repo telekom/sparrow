@@ -1,0 +1,38 @@
+# SPDX-FileCopyrightText: 2025 Deutsche Telekom IT GmbH
+#
+# SPDX-License-Identifier: Apache-2.0
+
+config:
+  default: true
+  MD003:
+    style: atx
+  MD004:
+    style: dash
+  MD007:
+    indent: 2
+  MD013:
+    line_length: 80
+    heading_line_length: 80
+    code_blocks: false
+    tables: false
+    headings: true
+    strict: true
+  MD022: true
+  MD029:
+    style: ordered
+  MD033: true
+  MD034: true
+  MD040: true
+  MD041: true
+  MD044: true
+  MD046:
+    style: fenced
+
+globs:
+  - "**/*.md"
+
+ignores:
+  - ".github/pull_request_template.md"
+  - "AGENTS.md"
+  - "chart/README.md"
+  - "docs/reference/*.md"
