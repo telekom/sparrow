@@ -189,6 +189,23 @@ sparrowConfig:
 #     token: ""
 #     baseUrl: https://gitlab.com
 #     projectId: ""
+#   # -- S3-compatible target manager configuration
+#   # type: s3
+#   # s3:
+#   #   endpoint: s3.amazonaws.com
+#   #   bucket: sparrow-targets
+#   #   region: eu-central-1
+#   #   prefix: ""
+#   #   useSSL: true
+#   #   auth:
+#   #     provider: static
+#   #     static:
+#   #       accessKeyID: ""
+#   #       secretAccessKey: ""
+#   #     # provider: oidc
+#   #     # oidc:
+#   #     #   tokenPath: /var/run/secrets/tokens/sparrow
+#   #     #   roleARN: arn:aws:iam::123456:role/sparrow-targets
 
 # -- Check configuration of the Sparrow read on runtime
 # see: https://github.com/telekom/sparrow?tab=readme-ov-file#checks

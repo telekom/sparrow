@@ -8,12 +8,15 @@ import (
 	"context"
 	"testing"
 	"time"
+
+	"github.com/telekom/sparrow/pkg/sparrow/targets/remote/s3"
 )
 
 func TestTargetManagerConfig_Validate(t *testing.T) {
 	tests := []struct {
 		name    string
 		cfg     TargetManagerConfig
+		s3Cfg   *s3.Config
 		wantErr bool
 	}{
 		{
@@ -143,9 +146,56 @@ func TestTargetManagerConfig_Validate(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "valid config - s3",
+			cfg: TargetManagerConfig{
+				Type: "s3",
+				General: General{
+					Scheme:        schemeHTTPS,
+					CheckInterval: 1 * time.Second,
+				},
+			},
+			// S3 config populated inline via interactor.Config
+			s3Cfg: &s3.Config{
+				Endpoint: "s3.example.com",
+				Bucket:   "test",
+				Auth: s3.AuthConfig{
+					Provider: "static",
+					Static: s3.StaticAuthConfig{
+						AccessKeyID:     "a",
+						SecretAccessKey: "s",
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "invalid config - s3 missing bucket",
+			cfg: TargetManagerConfig{
+				Type: "s3",
+				General: General{
+					Scheme:        schemeHTTPS,
+					CheckInterval: 1 * time.Second,
+				},
+			},
+			s3Cfg: &s3.Config{
+				Endpoint: "s3.example.com",
+				Auth: s3.AuthConfig{
+					Provider: "static",
+					Static: s3.StaticAuthConfig{
+						AccessKeyID:     "a",
+						SecretAccessKey: "s",
+					},
+				},
+			},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			if tt.s3Cfg != nil {
+				tt.cfg.S3 = *tt.s3Cfg
+			}
 			if err := tt.cfg.Validate(context.Background()); (err != nil) != tt.wantErr {
 				t.Errorf("Validate() error = %v, wantErr %v", err, tt.wantErr)
 			}
