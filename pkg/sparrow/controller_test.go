@@ -8,6 +8,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"testing"
 	"time"
 
@@ -103,15 +104,15 @@ func TestChecksController_Shutdown(t *testing.T) {
 		},
 		{
 			name:   "one check registered",
-			checks: []checks.Check{newMockCheck(t, "mockCheck")},
+			checks: []checks.Check{newMockCheck("mockCheck")},
 		},
 		{
 			name: "multiple checks registered",
 			checks: []checks.Check{
-				newMockCheck(t, "mockCheck1"),
-				newMockCheck(t, "mockCheck2"),
-				newMockCheck(t, "mockCheck3"),
-				newMockCheck(t, "mockCheck4"),
+				newMockCheck("mockCheck1"),
+				newMockCheck("mockCheck2"),
+				newMockCheck("mockCheck3"),
+				newMockCheck("mockCheck4"),
 			},
 		},
 	}
@@ -523,8 +524,7 @@ func TestGenerateCheckSpecs(t *testing.T) {
 }
 
 // newMockCheck creates a new mock check with the given name.
-func newMockCheck(t *testing.T, name string) *checks.CheckMock {
-	t.Helper()
+func newMockCheck(name string) *checks.CheckMock {
 	return &checks.CheckMock{
 		GetMetricCollectorsFunc: func() []prometheus.Collector {
 			return []prometheus.Collector{
@@ -538,12 +538,12 @@ func newMockCheck(t *testing.T, name string) *checks.CheckMock {
 		},
 		RemoveLabelledMetricsFunc: nil,
 		RunFunc: func(ctx context.Context, cResult chan checks.ResultDTO) error {
-			t.Logf("Run called for check %s", name)
+			slog.InfoContext(ctx, "Run called", "check", name)
 			return nil
 		},
 		SchemaFunc: nil,
 		ShutdownFunc: func() {
-			t.Logf("Shutdown called for check %s", name)
+			slog.Info("Shutdown called", "check", name)
 		},
 		UpdateConfigFunc: nil,
 	}
