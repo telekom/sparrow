@@ -5,8 +5,10 @@
 package runtime
 
 import (
+	"context"
 	"errors"
 
+	"github.com/telekom/sparrow/internal/logger"
 	"github.com/telekom/sparrow/pkg/checks"
 	"github.com/telekom/sparrow/pkg/checks/dns"
 	"github.com/telekom/sparrow/pkg/checks/health"
@@ -55,6 +57,16 @@ func (c Config) Iter() []checks.Runtime {
 		configs = append(configs, c.Traceroute)
 	}
 	return configs
+}
+
+// Enrich enriches the configuration with the provided [GlobalTarget]s.
+func (c Config) Enrich(ctx context.Context, targets []checks.GlobalTarget) Config {
+	l := logger.FromContext(ctx)
+	for _, cfg := range c.Iter() {
+		l.DebugContext(ctx, "Enriching check configuration", "check", cfg.For())
+		cfg.Enrich(ctx, targets)
+	}
+	return c
 }
 
 // size returns the number of checks configured
