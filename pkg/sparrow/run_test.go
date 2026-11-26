@@ -16,6 +16,7 @@ import (
 	"github.com/telekom/sparrow/pkg/checks/health"
 	"github.com/telekom/sparrow/pkg/checks/latency"
 	"github.com/telekom/sparrow/pkg/checks/runtime"
+	"github.com/telekom/sparrow/pkg/checks/traceroute"
 	"github.com/telekom/sparrow/pkg/config"
 	"github.com/telekom/sparrow/pkg/sparrow/targets"
 	"github.com/telekom/sparrow/pkg/sparrow/targets/interactor"
@@ -43,7 +44,7 @@ func TestSparrow_Run_FullComponentStart(t *testing.T) {
 			},
 			Config: interactor.Config{
 				Gitlab: gitlab.Config{
-					BaseURL:   "https://gitlab.com",
+					BaseURL:   "https://telekom.com",
 					Token:     "my-cool-token",
 					ProjectID: 42,
 				},
@@ -171,19 +172,19 @@ func TestSparrow_enrichTargets(t *testing.T) {
 			name: "config with targets (health + latency)",
 			config: runtime.Config{
 				Health: &health.Config{
-					Targets: []string{"https://gitlab.com"},
+					Targets: []string{"https://telekom.com"},
 				},
 				Latency: &latency.Config{
-					Targets: []string{"https://gitlab.com"},
+					Targets: []string{"https://telekom.com"},
 				},
 			},
 			globalTargets: gt,
 			expected: runtime.Config{
 				Health: &health.Config{
-					Targets: []string{"https://gitlab.com", testTarget},
+					Targets: []string{"https://telekom.com", testTarget},
 				},
 				Latency: &latency.Config{
-					Targets: []string{"https://gitlab.com", testTarget},
+					Targets: []string{"https://telekom.com", testTarget},
 				},
 			},
 		},
@@ -191,13 +192,32 @@ func TestSparrow_enrichTargets(t *testing.T) {
 			name: "config with targets (dns)",
 			config: runtime.Config{
 				Dns: &dns.Config{
-					Targets: []string{"gitlab.com"},
+					Targets: []string{"telekom.com"},
 				},
 			},
 			globalTargets: gt,
 			expected: runtime.Config{
 				Dns: &dns.Config{
-					Targets: []string{"gitlab.com", "localhost.de"},
+					Targets: []string{"telekom.com", "localhost.de"},
+				},
+			},
+		},
+		{
+			name: "config with targets (traceroute)",
+			config: runtime.Config{
+				Traceroute: &traceroute.Config{
+					Targets: []traceroute.Target{
+						{Addr: "telekom.com", Port: 443},
+					},
+				},
+			},
+			globalTargets: gt,
+			expected: runtime.Config{
+				Traceroute: &traceroute.Config{
+					Targets: []traceroute.Target{
+						{Addr: "telekom.com", Port: 443},
+						{Addr: "localhost.de", Port: 443},
+					},
 				},
 			},
 		},
@@ -223,7 +243,7 @@ func TestSparrow_enrichTargets(t *testing.T) {
 				},
 			},
 			globalTargets: append(gt, checks.GlobalTarget{
-				Url:      "https://sparrow.com",
+				Url:      "https://sparrow.telekom.com",
 				LastSeen: now,
 			}),
 			expected: runtime.Config{
@@ -241,16 +261,16 @@ func TestSparrow_enrichTargets(t *testing.T) {
 			},
 			globalTargets: []checks.GlobalTarget{
 				{
-					Url:      "http://az1.sparrow.com",
+					Url:      "http://az1.sparrow.telekom.com",
 					LastSeen: now,
 				},
 				{
-					Url: "https://az2.sparrow.com",
+					Url: "https://az2.sparrow.telekom.com",
 				},
 			},
 			expected: runtime.Config{
 				Dns: &dns.Config{
-					Targets: []string{"az1.sparrow.com", "az2.sparrow.com"},
+					Targets: []string{"az1.sparrow.telekom.com", "az2.sparrow.telekom.com"},
 				},
 			},
 		},
@@ -263,7 +283,7 @@ func TestSparrow_enrichTargets(t *testing.T) {
 					Targets: tt.globalTargets,
 				},
 				config: &config.Config{
-					SparrowName: "sparrow.com",
+					SparrowName: "sparrow.telekom.com",
 				},
 			}
 			got := s.enrichTargets(context.Background(), tt.config)
